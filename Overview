@@ -1,10 +1,14 @@
 1. CI/CD - Continuous Integration/ Continuous Deployment
-
+Continuous integration (CI) automatically builds, tests, and integrates code changes within a shared repository; then.
+Continuous delivery (CD) automatically delivers code changes to production-ready environments for approval; or.
+Continuous deployment (CD) automatically deploys code changes to customers directly.
 
 2. AWS - Amazon Web services
 It is cloud platform that provides many services like Software as service, Infrastructure as a Service (IaaS) and Platform as a Service (PaaS).
 We can create Virtual machines as per our requirement. 
 
-
 3. Git 
 It is a open source software/tool that helps to maintain small to large projects that helps to track the changes in the repository.
+
+4. Jenkins
+
