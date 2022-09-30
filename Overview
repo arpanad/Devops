@@ -12,3 +12,12 @@ It is a open source software/tool that helps to maintain small to large projects
 
 4. Jenkins
 An open source software that helps developers to build, test and deploy automatically.
+
+5. Ansible
+Ansible is an open-source IT engine that automates application deployment, cloud provisioning, intra service orchestration, and other IT tools.
+
+6. Docker
+Docker is an open platform for developing, shipping, and running applications
+
+7. Kubernates
+Kubernetes, also known as K8s, is an open-source system for automating deployment, scaling, and management of containerized applications.
