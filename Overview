@@ -15,6 +15,8 @@ An open source software that helps developers to build, test and deploy automati
 
 5. Ansible
 Ansible is an open-source IT engine that automates application deployment, cloud provisioning, intra service orchestration, and other IT tools.
+Configuration Management tool
+Playbook - Set of commands/ tasks to do in yaml file
 
 6. Docker
 Docker is an open platform for developing, shipping, and running applications
