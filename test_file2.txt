@@ -2,3 +2,4 @@ Test file 2
 
 
 This file is created for demo 
+Adding a new line for demo purpose of protection rule
