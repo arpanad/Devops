@@ -3,14 +3,14 @@ pipeline {
     label "Master"
   }
   stages {
-    stage('hello') {
+    stage('Version 1') {
       steps {
-        'python --version'
+        python --version
       }
     }
-    stage('version') {
+    stage('version 2') {
       steps {
-        sh 'python3 --version'
+        sh 'python --version'
       }
     }
   }
