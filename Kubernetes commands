@@ -614,3 +614,625 @@ How are you
 PS C:\WINDOWS\system32>
 PS C:\WINDOWS\system32>
 PS C:\WINDOWS\system32>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+========================================================================================================================================================================
+PS C:\Windows\system32> kubectl version
+WARNING: This version information is deprecated and will be replaced with the output from kubectl version --short.  Use --output=yaml|json to get the full version.
+Client Version: version.Info{Major:"1", Minor:"25", GitVersion:"v1.25.4", GitCommit:"872a965c6c6526caa949f0c6ac028ef7aff3fb78", GitTreeState:"clean", BuildDate:"2022-11-09T13:36:36Z", GoVersion:"go1.19.3", Compiler:"gc", Platform:"windows/amd64"}
+Kustomize Version: v4.5.7
+Server Version: version.Info{Major:"1", Minor:"25", GitVersion:"v1.25.4", GitCommit:"872a965c6c6526caa949f0c6ac028ef7aff3fb78", GitTreeState:"clean", BuildDate:"2022-11-09T13:29:58Z", GoVersion:"go1.19.3", Compiler:"gc", Platform:"linux/amd64"}
+PS C:\Windows\system32> kubectl get namespaces
+NAME              STATUS   AGE
+default           Active   3m10s
+kube-node-lease   Active   3m12s
+kube-public       Active   3m12s
+kube-system       Active   3m12s
+PS C:\Windows\system32> kubectl get po --all-namespaces
+NAMESPACE     NAME                                     READY   STATUS    RESTARTS   AGE
+kube-system   coredns-565d847f94-qnlrc                 1/1     Running   0          3m21s
+kube-system   coredns-565d847f94-tjhm7                 1/1     Running   0          3m21s
+kube-system   etcd-docker-desktop                      1/1     Running   0          3m24s
+kube-system   kube-apiserver-docker-desktop            1/1     Running   0          3m26s
+kube-system   kube-controller-manager-docker-desktop   1/1     Running   0          3m24s
+kube-system   kube-proxy-znnkk                         1/1     Running   0          3m21s
+kube-system   kube-scheduler-docker-desktop            1/1     Running   0          3m19s
+kube-system   storage-provisioner                      1/1     Running   0          3m14s
+kube-system   vpnkit-controller                        1/1     Running   0          3m13s
+PS C:\Windows\system32> kubectl get po -n kube-system
+NAME                                     READY   STATUS    RESTARTS   AGE
+coredns-565d847f94-qnlrc                 1/1     Running   0          4m35s
+coredns-565d847f94-tjhm7                 1/1     Running   0          4m35s
+etcd-docker-desktop                      1/1     Running   0          4m38s
+kube-apiserver-docker-desktop            1/1     Running   0          4m40s
+kube-controller-manager-docker-desktop   1/1     Running   0          4m38s
+kube-proxy-znnkk                         1/1     Running   0          4m35s
+kube-scheduler-docker-desktop            1/1     Running   0          4m33s
+storage-provisioner                      1/1     Running   0          4m28s
+vpnkit-controller                        1/1     Running   0          4m27s
+PS C:\Windows\system32> kubectl get svc -n kube-system
+NAME       TYPE        CLUSTER-IP   EXTERNAL-IP   PORT(S)                  AGE
+kube-dns   ClusterIP   10.96.0.10   <none>        53/UDP,53/TCP,9153/TCP   5m8s
+PS C:\Windows\system32> kubectl get pods -o=jsonpath="{.items[*]['metadata.name', 'metadata.namespace']}"
+PS C:\Windows\system32> kubectl run nginx --image=nginx --restart=Never
+pod/nginx created
+PS C:\Windows\system32> kubectl get po
+NAME    READY   STATUS              RESTARTS   AGE
+nginx   0/1     ContainerCreating   0          10s
+PS C:\Windows\system32> kubectl get pods -o=jsonpath="{.items[*]['metadata.name', 'metadata.namespace']}"
+nginx default
+PS C:\Windows\system32> kubectl run nginx-yaml --image=nginx --restart=Never --dry-run -o yaml > nginx-pod.yaml
+W0319 05:56:27.127999    2896 helpers.go:663] --dry-run is deprecated and can be replaced with --dry-run=client.
+PS C:\Windows\system32>
+PS C:\Windows\system32>
+PS C:\Windows\system32> kubectl run nginx --image=nginx --restart=Never --dry-run=client -o yaml > nginx-pod.yaml
+
+
+
+PS C:\Windows\system32> kubectl create -f nginx-pod.yaml
+pod/nginx created
+PS C:\Windows\system32>
+PS C:\Windows\system32>
+PS C:\Windows\system32> kubectl get pod
+NAME    READY   STATUS    RESTARTS   AGE
+nginx   1/1     Running   0          32s
+PS C:\Windows\system32>
+PS C:\Windows\system32>
+PS C:\Windows\system32> kubectl get po nginx -o yaml
+apiVersion: v1
+kind: Pod
+metadata:
+  creationTimestamp: "2023-03-19T00:33:20Z"
+  labels:
+    run: nginx
+  name: nginx
+  namespace: default
+  resourceVersion: "1524"
+  uid: a1a8225f-b2de-4e60-9164-a5dfe039a00c
+spec:
+  containers:
+  - image: nginx
+    imagePullPolicy: Always
+    name: nginx
+    resources: {}
+    terminationMessagePath: /dev/termination-log
+    terminationMessagePolicy: File
+    volumeMounts:
+    - mountPath: /var/run/secrets/kubernetes.io/serviceaccount
+      name: kube-api-access-rvgl6
+      readOnly: true
+  dnsPolicy: ClusterFirst
+  enableServiceLinks: true
+  nodeName: docker-desktop
+  preemptionPolicy: PreemptLowerPriority
+  priority: 0
+  restartPolicy: Never
+  schedulerName: default-scheduler
+  securityContext: {}
+  serviceAccount: default
+  serviceAccountName: default
+  terminationGracePeriodSeconds: 30
+  tolerations:
+  - effect: NoExecute
+    key: node.kubernetes.io/not-ready
+    operator: Exists
+    tolerationSeconds: 300
+  - effect: NoExecute
+    key: node.kubernetes.io/unreachable
+    operator: Exists
+    tolerationSeconds: 300
+  volumes:
+  - name: kube-api-access-rvgl6
+    projected:
+      defaultMode: 420
+      sources:
+      - serviceAccountToken:
+          expirationSeconds: 3607
+          path: token
+      - configMap:
+          items:
+          - key: ca.crt
+            path: ca.crt
+          name: kube-root-ca.crt
+      - downwardAPI:
+          items:
+          - fieldRef:
+              apiVersion: v1
+              fieldPath: metadata.namespace
+            path: namespace
+status:
+  conditions:
+  - lastProbeTime: null
+    lastTransitionTime: "2023-03-19T00:33:20Z"
+    status: "True"
+    type: Initialized
+  - lastProbeTime: null
+    lastTransitionTime: "2023-03-19T00:33:25Z"
+    status: "True"
+    type: Ready
+  - lastProbeTime: null
+    lastTransitionTime: "2023-03-19T00:33:25Z"
+    status: "True"
+    type: ContainersReady
+  - lastProbeTime: null
+    lastTransitionTime: "2023-03-19T00:33:20Z"
+    status: "True"
+    type: PodScheduled
+  containerStatuses:
+  - containerID: docker://824c39f3523f193b1a07e05b10c806b137184a92dcdfe7022c3b5ba04f269712
+    image: nginx:latest
+    imageID: docker-pullable://nginx@sha256:aa0afebbb3cfa473099a62c4b32e9b3fb73ed23f2a75a65ce1d4b4f55a5c2ef2
+    lastState: {}
+    name: nginx
+    ready: true
+    restartCount: 0
+    started: true
+    state:
+      running:
+        startedAt: "2023-03-19T00:33:24Z"
+  hostIP: 192.168.65.4
+  phase: Running
+  podIP: 10.1.0.7
+  podIPs:
+  - ip: 10.1.0.7
+  qosClass: BestEffort
+  startTime: "2023-03-19T00:33:20Z"
+PS C:\Windows\system32>
+PS C:\Windows\system32>
+PS C:\Windows\system32>
+PS C:\Windows\system32> kubectl get po nginx -o yaml --export
+error: unknown flag: --export
+See 'kubectl get --help' for usage.
+
+
+
+PS C:\Windows\system32> kubectl describe pod nginx
+Name:             nginx
+Namespace:        default
+Priority:         0
+Service Account:  default
+Node:             docker-desktop/192.168.65.4
+Start Time:       Sun, 19 Mar 2023 06:03:20 +0530
+Labels:           run=nginx
+Annotations:      <none>
+Status:           Running
+IP:               10.1.0.7
+IPs:
+  IP:  10.1.0.7
+Containers:
+  nginx:
+    Container ID:   docker://824c39f3523f193b1a07e05b10c806b137184a92dcdfe7022c3b5ba04f269712
+    Image:          nginx
+    Image ID:       docker-pullable://nginx@sha256:aa0afebbb3cfa473099a62c4b32e9b3fb73ed23f2a75a65ce1d4b4f55a5c2ef2
+    Port:           <none>
+    Host Port:      <none>
+    State:          Running
+      Started:      Sun, 19 Mar 2023 06:03:24 +0530
+    Ready:          True
+    Restart Count:  0
+    Environment:    <none>
+    Mounts:
+      /var/run/secrets/kubernetes.io/serviceaccount from kube-api-access-rvgl6 (ro)
+Conditions:
+  Type              Status
+  Initialized       True
+  Ready             True
+  ContainersReady   True
+  PodScheduled      True
+Volumes:
+  kube-api-access-rvgl6:
+    Type:                    Projected (a volume that contains injected data from multiple sources)
+    TokenExpirationSeconds:  3607
+    ConfigMapName:           kube-root-ca.crt
+    ConfigMapOptional:       <nil>
+    DownwardAPI:             true
+QoS Class:                   BestEffort
+Node-Selectors:              <none>
+Tolerations:                 node.kubernetes.io/not-ready:NoExecute op=Exists for 300s
+                             node.kubernetes.io/unreachable:NoExecute op=Exists for 300s
+Events:
+  Type    Reason     Age   From               Message
+  ----    ------     ----  ----               -------
+  Normal  Scheduled  11m   default-scheduler  Successfully assigned default/nginx to docker-desktop
+  Normal  Pulling    11m   kubelet            Pulling image "nginx"
+  Normal  Pulled     11m   kubelet            Successfully pulled image "nginx" in 2.8576236s
+  Normal  Created    11m   kubelet            Created container nginx
+  Normal  Started    11m   kubelet            Started container nginx
+PS C:\Windows\system32>
+PS C:\Windows\system32>
+PS C:\Windows\system32>
+PS C:\Windows\system32>
+PS C:\Windows\system32> kubectl delete po nginx --grace-period=0 --force
+Warning: Immediate deletion does not wait for confirmation that the running resource has been terminated. The resource may continue to run on the cluster indefinitely.
+pod "nginx" force deleted
+PS C:\Windows\system32>
+PS C:\Windows\system32>
+PS C:\Windows\system32> kubectl run nginx --image=nginx:1.17.4 --restart=Never --port=80
+pod/nginx created
+PS C:\Windows\system32> kubectl set image pod/nginx nginx=nginx:1.15-alpine
+pod/nginx image updated
+PS C:\Windows\system32>
+PS C:\Windows\system32>
+PS C:\Windows\system32>
+PS C:\Windows\system32> kubectl describe po nginx
+Name:             nginx
+Namespace:        default
+Priority:         0
+Service Account:  default
+Node:             docker-desktop/192.168.65.4
+Start Time:       Sun, 19 Mar 2023 06:17:10 +0530
+Labels:           run=nginx
+Annotations:      <none>
+Status:           Running
+IP:               10.1.0.8
+IPs:
+  IP:  10.1.0.8
+Containers:
+  nginx:
+    Container ID:   docker://ce9e5fde1507042c1864558b9fc84c9cb238c95a25bb73cacc459fb41b6e920e
+    Image:          nginx:1.15-alpine
+    Image ID:       docker-pullable://nginx@sha256:57a226fb6ab6823027c0704a9346a890ffb0cacde06bc19bbc234c8720673555
+    Port:           80/TCP
+    Host Port:      0/TCP
+    State:          Running
+      Started:      Sun, 19 Mar 2023 06:17:45 +0530
+    Last State:     Terminated
+      Reason:       Completed
+      Exit Code:    0
+      Started:      Sun, 19 Mar 2023 06:17:34 +0530
+      Finished:     Sun, 19 Mar 2023 06:17:35 +0530
+    Ready:          True
+    Restart Count:  1
+    Environment:    <none>
+    Mounts:
+      /var/run/secrets/kubernetes.io/serviceaccount from kube-api-access-sphl4 (ro)
+Conditions:
+  Type              Status
+  Initialized       True
+  Ready             True
+  ContainersReady   True
+  PodScheduled      True
+Volumes:
+  kube-api-access-sphl4:
+    Type:                    Projected (a volume that contains injected data from multiple sources)
+    TokenExpirationSeconds:  3607
+    ConfigMapName:           kube-root-ca.crt
+    ConfigMapOptional:       <nil>
+    DownwardAPI:             true
+QoS Class:                   BestEffort
+Node-Selectors:              <none>
+Tolerations:                 node.kubernetes.io/not-ready:NoExecute op=Exists for 300s
+                             node.kubernetes.io/unreachable:NoExecute op=Exists for 300s
+Events:
+  Type    Reason     Age               From               Message
+  ----    ------     ----              ----               -------
+  Normal  Scheduled  36s               default-scheduler  Successfully assigned default/nginx to docker-desktop
+  Normal  Pulling    35s               kubelet            Pulling image "nginx:1.17.4"
+  Normal  Pulled     13s               kubelet            Successfully pulled image "nginx:1.17.4" in 22.4394011s
+  Normal  Killing    11s               kubelet            Container nginx definition changed, will be restarted
+  Normal  Pulling    10s               kubelet            Pulling image "nginx:1.15-alpine"
+  Normal  Pulled     2s                kubelet            Successfully pulled image "nginx:1.15-alpine" in 8.4166606s
+  Normal  Created    1s (x2 over 12s)  kubelet            Created container nginx
+  Normal  Started    1s (x2 over 12s)  kubelet            Started container nginx
+PS C:\Windows\system32>
+PS C:\Windows\system32>
+PS C:\Windows\system32>
+PS C:\Windows\system32>
+PS C:\Windows\system32> kubectl set image pod/nginx nginx=nginx:1.17.1
+pod/nginx image updated
+PS C:\Windows\system32>
+PS C:\Windows\system32>
+PS C:\Windows\system32> kubectl get po nginx -w
+NAME    READY   STATUS    RESTARTS        AGE
+nginx   1/1     Running   1 (3m59s ago)   4m24s
+nginx   1/1     Running   2 (23s ago)     4m25s
+PS C:\Windows\system32>
+PS C:\Windows\system32>
+PS C:\Windows\system32> kubectl get po nginx -o jsonpath='{.spec.containers[].image}{"\n"}'
+error: error parsing jsonpath {.spec.containers[].image}{\n}, unrecognized character in action: U+005C '\'
+PS C:\Windows\system32>
+PS C:\Windows\system32>
+PS C:\Windows\system32> $ kubectl get pods -o jsonpath="{.spec.containers[].image}{\\n}"
+$ : The term '$' is not recognized as the name of a cmdlet, function, script file, or operable program. Check the spelling of the name, or if a path was included, verify that the path is correct and try again.
+At line:1 char:1
++ $ kubectl get pods -o jsonpath="{.spec.containers[].image}{\\n}"
++ ~
+    + CategoryInfo          : ObjectNotFound: ($:String) [], CommandNotFoundException
+    + FullyQualifiedErrorId : CommandNotFoundException
+
+PS C:\Windows\system32> kubectl get pods -o jsonpath="{.spec.containers[].image}{\\n}"
+error: error parsing jsonpath {.spec.containers[].image}{\\n}, unrecognized character in action: U+005C '\'
+PS C:\Windows\system32>
+PS C:\Windows\system32>
+PS C:\Windows\system32> kubectl get pods -o jsonpath="{.spec.containers[].image}"
+PS C:\Windows\system32>
+PS C:\Windows\system32>
+PS C:\Windows\system32> kubectl get pods
+NAME    READY   STATUS    RESTARTS       AGE
+nginx   1/1     Running   2 (4m2s ago)   8m4s
+PS C:\Windows\system32>
+PS C:\Windows\system32>
+PS C:\Windows\system32> kubectl get po nginx -o jsonpath='{.spec.containers[].image}'
+nginx:1.17.1
+
+
+PS C:\Windows\system32> kubectl run nginx-1 --image=nginx --restart=Never
+pod/nginx-1 created
+PS C:\Windows\system32>
+PS C:\Windows\system32>
+PS C:\Windows\system32> kubectl exec -it nginx /bin/sh
+kubectl exec [POD] [COMMAND] is DEPRECATED and will be removed in a future version. Use kubectl exec [POD] -- [COMMAND] instead.
+#
+#
+# ^C
+# ^C
+# exit
+PS C:\Windows\system32>
+PS C:\Windows\system32>
+PS C:\Windows\system32> kubectl get po nginx -o wide
+NAME    READY   STATUS    RESTARTS      AGE   IP         NODE             NOMINATED NODE   READINESS GATES
+nginx   1/1     Running   2 (14m ago)   18m   10.1.0.8   docker-desktop   <none>           <none>
+PS C:\Windows\system32>
+PS C:\Windows\system32>
+PS C:\Windows\system32> kubectl run busybox --image=busybox --restart=Never -- ls
+pod/busybox created
+PS C:\Windows\system32>
+PS C:\Windows\system32> kubectl logs busybox
+bin
+dev
+etc
+home
+lib
+lib64
+proc
+root
+sys
+tmp
+usr
+var
+
+
+
+PS C:\Windows\system32> kubectl logs busybox -p
+Error from server (BadRequest): previous terminated container "busybox" in pod "busybox" not found
+PS C:\Windows\system32>
+PS C:\Windows\system32>
+PS C:\Windows\system32>
+PS C:\Windows\system32>
+PS C:\Windows\system32>
+PS C:\Windows\system32> kubectl get pod busybox
+NAME      READY   STATUS      RESTARTS   AGE
+busybox   0/1     Completed   0          5m7s
+
+
+
+
+PS C:\Windows\system32> kubectl run busybox-1 --image=busybox --restart=Never -- /bin/sh -c "sleep 60"
+pod/busybox-1 created
+PS C:\Windows\system32> 
+PS C:\Windows\system32>
+PS C:\Windows\system32>
+PS C:\Windows\system32>
+PS C:\Windows\system32> kubectl get pod busybox-1 -w
+NAME        READY   STATUS    RESTARTS   AGE
+busybox-1   1/1     Running   0          40s
+busybox-1   0/1     Completed   0          64s
+busybox-1   0/1     Completed   0          66s
+
+
+
+PS C:\Windows\system32> kubectl run busybox-1 --image=busybox --restart=Never -- /bin/sh -c "sleep 3600"
+pod/busybox-1 created
+PS C:\Windows\system32>
+PS C:\Windows\system32>
+PS C:\Windows\system32> kubectl get po nginx -o wide
+NAME    READY   STATUS    RESTARTS      AGE   IP         NODE             NOMINATED NODE   READINESS GATES
+nginx   1/1     Running   2 (42m ago)   46m   10.1.0.8   docker-desktop   <none>           <none>
+PS C:\Windows\system32>
+PS C:\Windows\system32>
+PS C:\Windows\system32>
+PS C:\Windows\system32> kubectl exec -it busybox-1 -- wget -o- 10.1.0.8
+Connecting to 10.1.0.8 (10.1.0.8:80)
+saving to 'index.html'
+index.html           100% |*********************************************************************************************************************************************************************************************|   612  0:00:00 ETA
+'index.html' saved
+
+
+
+PS C:\Windows\system32> kubectl run busybox --image=nginx --restart=Never -it -- echo "How are you"
+How are you
+PS C:\Windows\system32>
+PS C:\Windows\system32>
+PS C:\Windows\system32> kubectl delete po busybox
+pod "busybox" deleted
+PS C:\Windows\system32>
+PS C:\Windows\system32>
+PS C:\Windows\system32> kubectl run busybox --image=nginx --restart=Never -it --rm -- echo "How are you"
+How are you
+pod "busybox" deleted
+
+
+
+
+PS C:\Windows\system32> kubectl run nginx-2 --image=nginx --restart=Never --port=80
+pod/nginx-2 created
+PS C:\Windows\system32>
+PS C:\Windows\system32>
+PS C:\Windows\system32> kubectl get po nginx --v=7
+I0319 07:11:34.841541   11460 loader.go:374] Config loaded from file:  C:\Users\User\.kube\config
+I0319 07:11:34.853061   11460 round_trippers.go:463] GET https://kubernetes.docker.internal:6443/api/v1/namespaces/default/pods/nginx
+I0319 07:11:34.854060   11460 round_trippers.go:469] Request Headers:
+I0319 07:11:34.854060   11460 round_trippers.go:473]     Accept: application/json;as=Table;v=v1;g=meta.k8s.io,application/json;as=Table;v=v1beta1;g=meta.k8s.io,application/json
+I0319 07:11:34.854060   11460 round_trippers.go:473]     User-Agent: kubectl.exe/v1.25.4 (windows/amd64) kubernetes/872a965
+I0319 07:11:34.872508   11460 round_trippers.go:574] Response Status: 200 OK in 18 milliseconds
+NAME    READY   STATUS    RESTARTS      AGE
+nginx   1/1     Running   2 (50m ago)   54m
+PS C:\Windows\system32>
+PS C:\Windows\system32>
+PS C:\Windows\system32> kubectl get po nginx --v=8
+I0319 07:11:48.286123    7176 loader.go:374] Config loaded from file:  C:\Users\User\.kube\config
+I0319 07:11:48.297126    7176 round_trippers.go:463] GET https://kubernetes.docker.internal:6443/api/v1/namespaces/default/pods/nginx
+I0319 07:11:48.297126    7176 round_trippers.go:469] Request Headers:
+I0319 07:11:48.297126    7176 round_trippers.go:473]     Accept: application/json;as=Table;v=v1;g=meta.k8s.io,application/json;as=Table;v=v1beta1;g=meta.k8s.io,application/json
+I0319 07:11:48.297126    7176 round_trippers.go:473]     User-Agent: kubectl.exe/v1.25.4 (windows/amd64) kubernetes/872a965
+I0319 07:11:48.313167    7176 round_trippers.go:574] Response Status: 200 OK in 16 milliseconds
+I0319 07:11:48.313167    7176 round_trippers.go:577] Response Headers:
+I0319 07:11:48.313167    7176 round_trippers.go:580]     X-Kubernetes-Pf-Flowschema-Uid: 63227214-a15a-482b-a0e2-7ed1a48af44f
+I0319 07:11:48.313167    7176 round_trippers.go:580]     X-Kubernetes-Pf-Prioritylevel-Uid: 404f2442-24cf-4890-8f0f-cfd6d6d14e3b
+I0319 07:11:48.313167    7176 round_trippers.go:580]     Date: Sun, 19 Mar 2023 01:41:48 GMT
+I0319 07:11:48.313167    7176 round_trippers.go:580]     Audit-Id: 564c0afb-8471-4969-9064-0f7b616c71fc
+I0319 07:11:48.313167    7176 round_trippers.go:580]     Cache-Control: no-cache, private
+I0319 07:11:48.313167    7176 round_trippers.go:580]     Content-Type: application/json
+I0319 07:11:48.314168    7176 request.go:1154] Response Body: {"kind":"Table","apiVersion":"meta.k8s.io/v1","metadata":{"resourceVersion":"2901"},"columnDefinitions":[{"name":"Name","type":"string","format":"name","description":"Name must be unique within a namespace. Is required when creating resources, although some resources may allow a client to request the generation of an appropriate name automatically. Name is primarily intended for creation idempotence and configuration definition. Cannot be updated. More info: http://kubernetes.io/docs/user-guide/identifiers#names","priority":0},{"name":"Ready","type":"string","format":"","description":"The aggregate readiness state of this pod for accepting traffic.","priority":0},{"name":"Status","type":"string","format":"","description":"The aggregate status of the containers in this pod.","priority":0},{"name":"Restarts","type":"string","format":"","description":"The number of times the containers in this pod have been restarted and when the last container in this pod has restarted.","priority":0},{"name":"Age","type":"stri [truncated 3785 chars]
+NAME    READY   STATUS    RESTARTS      AGE
+nginx   1/1     Running   2 (50m ago)   54m
+PS C:\Windows\system32>
+PS C:\Windows\system32>
+PS C:\Windows\system32> kubectl get po nginx --v=9
+I0319 07:11:59.736689   13840 loader.go:374] Config loaded from file:  C:\Users\User\.kube\config
+I0319 07:11:59.747207   13840 round_trippers.go:466] curl -v -XGET  -H "Accept: application/json;as=Table;v=v1;g=meta.k8s.io,application/json;as=Table;v=v1beta1;g=meta.k8s.io,application/json" -H "User-Agent: kubectl.exe/v1.25.4 (windows/amd64) kubernetes/872a965" 'https://kubernetes.docker.internal:6443/api/v1/namespaces/default/pods/nginx'
+I0319 07:11:59.752206   13840 round_trippers.go:495] HTTP Trace: DNS Lookup for kubernetes.docker.internal resolved to [{127.0.0.1 }]
+I0319 07:11:59.753208   13840 round_trippers.go:510] HTTP Trace: Dial to tcp:127.0.0.1:6443 succeed
+I0319 07:11:59.767208   13840 round_trippers.go:553] GET https://kubernetes.docker.internal:6443/api/v1/namespaces/default/pods/nginx 200 OK in 18 milliseconds
+I0319 07:11:59.767208   13840 round_trippers.go:570] HTTP Statistics: DNSLookup 3 ms Dial 1 ms TLSHandshake 7 ms ServerProcessing 6 ms Duration 18 ms
+I0319 07:11:59.767208   13840 round_trippers.go:577] Response Headers:
+I0319 07:11:59.767208   13840 round_trippers.go:580]     Audit-Id: 13a6131a-193d-4ffe-a8de-3065c8187db5
+I0319 07:11:59.767208   13840 round_trippers.go:580]     Cache-Control: no-cache, private
+I0319 07:11:59.768207   13840 round_trippers.go:580]     Content-Type: application/json
+I0319 07:11:59.768207   13840 round_trippers.go:580]     X-Kubernetes-Pf-Flowschema-Uid: 63227214-a15a-482b-a0e2-7ed1a48af44f
+I0319 07:11:59.768207   13840 round_trippers.go:580]     X-Kubernetes-Pf-Prioritylevel-Uid: 404f2442-24cf-4890-8f0f-cfd6d6d14e3b
+I0319 07:11:59.768207   13840 round_trippers.go:580]     Date: Sun, 19 Mar 2023 01:41:59 GMT
+I0319 07:11:59.768207   13840 request.go:1154] Response Body: {"kind":"Table","apiVersion":"meta.k8s.io/v1","metadata":{"resourceVersion":"2901"},"columnDefinitions":[{"name":"Name","type":"string","format":"name","description":"Name must be unique within a namespace. Is required when creating resources, although some resources may allow a client to request the generation of an appropriate name automatically. Name is primarily intended for creation idempotence and configuration definition. Cannot be updated. More info: http://kubernetes.io/docs/user-guide/identifiers#names","priority":0},{"name":"Ready","type":"string","format":"","description":"The aggregate readiness state of this pod for accepting traffic.","priority":0},{"name":"Status","type":"string","format":"","description":"The aggregate status of the containers in this pod.","priority":0},{"name":"Restarts","type":"string","format":"","description":"The number of times the containers in this pod have been restarted and when the last container in this pod has restarted.","priority":0},{"name":"Age","type":"string","format":"","description":"CreationTimestamp is a timestamp representing the server time when this object was created. It is not guaranteed to be set in happens-before order across separate operations. Clients may not set this value. It is represented in RFC3339 form and is in UTC.\n\nPopulated by the system. Read-only. Null for lists. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#metadata","priority":0},{"name":"IP","type":"string","format":"","description":"IP address allocated to the pod. Routable at least within the cluster. Empty if not yet allocated.","priority":1},{"name":"Node","type":"string","format":"","description":"NodeName is a request to schedule this pod onto a specific node. If it is non-empty, the scheduler simply schedules this pod onto that node, assuming that it fits resource requirements.","priority":1},{"name":"Nominated Node","type":"string","format":"","description":"nominatedNodeName is set only when this pod preempts other pods on the node, but it cannot be scheduled right away as preemption victims receive their graceful termination periods. This field does not guarantee that the pod will be scheduled on this node. Scheduler may decide to place the pod elsewhere if other nodes become available sooner. Scheduler may also decide to give the resources on this node to a higher priority pod that is created after preemption. As a result, this field may be different than PodSpec.nodeName when the pod is scheduled.","priority":1},{"name":"Readiness Gates","type":"string","format":"","description":"If specified, all readiness gates will be evaluated for pod readiness. A pod is ready when all its containers are ready AND all conditions specified in the readiness gates have status equal to \"True\" More info: https://git.k8s.io/enhancements/keps/sig-network/580-pod-readiness-gates","priority":1}],"rows":[{"cells":["nginx","1/1","Running","2 (50m ago)","54m","10.1.0.8","docker-desktop","\u003cnone\u003e","\u003cnone\u003e"],"object":{"kind":"PartialObjectMetadata","apiVersion":"meta.k8s.io/v1","metadata":{"name":"nginx","namespace":"default","uid":"81774521-fefc-43d8-95fa-15e0bdf26e8c","resourceVersion":"2901","creationTimestamp":"2023-03-19T00:47:10Z","labels":{"run":"nginx"},"managedFields":[{"manager":"kubectl-run","operation":"Update","apiVersion":"v1","time":"2023-03-19T00:47:10Z","fieldsType":"FieldsV1","fieldsV1":{"f:metadata":{"f:labels":{".":{},"f:run":{}}},"f:spec":{"f:containers":{"k:{\"name\":\"nginx\"}":{".":{},"f:imagePullPolicy":{},"f:name":{},"f:ports":{".":{},"k:{\"containerPort\":80,\"protocol\":\"TCP\"}":{".":{},"f:containerPort":{},"f:protocol":{}}},"f:resources":{},"f:terminationMessagePath":{},"f:terminationMessagePolicy":{}}},"f:dnsPolicy":{},"f:enableServiceLinks":{},"f:restartPolicy":{},"f:schedulerName":{},"f:securityContext":{},"f:terminationGracePeriodSeconds":{}}}},{"manager":"kubectl-set","operation":"Update","apiVersion":"v1","time":"2023-03-19T00:51:12Z","fieldsType":"FieldsV1","fieldsV1":{"f:spec":{"f:containers":{"k:{\"name\":\"nginx\"}":{"f:image":{}}}}}},{"manager":"kubelet","operation":"Update","apiVersion":"v1","time":"2023-03-19T00:51:35Z","fieldsType":"FieldsV1","fieldsV1":{"f:status":{"f:conditions":{"k:{\"type\":\"ContainersReady\"}":{".":{},"f:lastProbeTime":{},"f:lastTransitionTime":{},"f:status":{},"f:type":{}},"k:{\"type\":\"Initialized\"}":{".":{},"f:lastProbeTime":{},"f:lastTransitionTime":{},"f:status":{},"f:type":{}},"k:{\"type\":\"Ready\"}":{".":{},"f:lastProbeTime":{},"f:lastTransitionTime":{},"f:status":{},"f:type":{}}},"f:containerStatuses":{},"f:hostIP":{},"f:phase":{},"f:podIP":{},"f:podIPs":{".":{},"k:{\"ip\":\"10.1.0.8\"}":{".":{},"f:ip":{}}},"f:startTime":{}}},"subresource":"status"}]}}}]}
+NAME    READY   STATUS    RESTARTS      AGE
+nginx   1/1     Running   2 (50m ago)   54m
+
+
+
+
+PS C:\Windows\system32> kubectl get po -o=custom-columns="POD_NAME:.metadata.name, POD_STATUS:.status.containerStatuses[].state"
+POD_NAME     POD_STATUS
+busybox-1   map[running:map[startedAt:2023-03-19T01:32:41Z]]
+nginx       map[running:map[startedAt:2023-03-19T00:51:35Z]]
+nginx-1     map[running:map[startedAt:2023-03-19T01:03:15Z]]
+nginx-2     map[running:map[startedAt:2023-03-19T01:41:20Z]]
+PS C:\Windows\system32>
+PS C:\Windows\system32>
+PS C:\Windows\system32> kubectl get pods --sort-by=.metadata.name
+NAME        READY   STATUS    RESTARTS      AGE
+busybox-1   1/1     Running   0             16m
+nginx       1/1     Running   2 (58m ago)   62m
+nginx-1     1/1     Running   0             46m
+nginx-2     1/1     Running   0             8m17s
+
+
+PS C:\Windows\system32> kubectl get pods --sort-by=.metadata.creationTimestamp
+NAME        READY   STATUS    RESTARTS      AGE
+nginx       1/1     Running   2 (60m ago)   64m
+nginx-1     1/1     Running   0             48m
+busybox-1   1/1     Running   0             18m
+nginx-2     1/1     Running   0             10m
+PS C:\Windows\system32>
+PS C:\Windows\system32>
+PS C:\Windows\system32>
+PS C:\Windows\system32>
+PS C:\Windows\system32>
+PS C:\Windows\system32> kubectl get po -o=custom-columns="POD_NAME:.metadata.name, POD_STATUS:.status.containerStatuses[].state" --sort-by=.metadata.creationTimestamp
+POD_NAME     POD_STATUS
+nginx       map[running:map[startedAt:2023-03-19T00:51:35Z]]
+nginx-1     map[running:map[startedAt:2023-03-19T01:03:15Z]]
+busybox-1   map[running:map[startedAt:2023-03-19T01:32:41Z]]
+nginx-2     map[running:map[startedAt:2023-03-19T01:41:20Z]]
+
+
+
+
+PS C:\Users\User> kubectl create -f multi-container2.yaml
+pod/busybox1 created
+PS C:\Users\User>
+PS C:\Users\User>
+PS C:\Users\User>
+PS C:\Users\User>
+PS C:\Users\User> kubectl get po
+NAME        READY   STATUS        RESTARTS      AGE
+busybox     1/2     Terminating   0             4m20s
+busybox-1   1/1     Running       0             49m
+busybox1    3/3     Running       0             17s
+nginx       1/1     Running       2 (90m ago)   94m
+nginx-1     1/1     Running       0             78m
+nginx-2     1/1     Running       0             40m
+PS C:\Users\User>
+PS C:\Users\User> kubectl get po
+NAME        READY   STATUS    RESTARTS      AGE
+busybox-1   1/1     Running   0             49m
+busybox1    3/3     Running   0             29s
+nginx       1/1     Running   2 (91m ago)   95m
+nginx-1     1/1     Running   0             79m
+nginx-2     1/1     Running   0             41m
+
+
+
+
+PS C:\Users\User> kubectl logs busybox1 -c busybox11
+bin
+dev
+etc
+home
+lib
+lib64
+proc
+root
+sys
+tmp
+usr
+var
+PS C:\Users\User>
+PS C:\Users\User>
+PS C:\Users\User>
+PS C:\Users\User> kubectl logs busybox1 -c busybox22
+Hello world
+PS C:\Users\User>
+PS C:\Users\User>
+PS C:\Users\User> kubectl logs busybox1 -c busybox33
+this is third container
+
+
+PS C:\Users\User> kubectl exec busybox1 -c busybox33 -- ls
+bin
+dev
+etc
+home
+lib
+lib64
+proc
+root
+sys
+tmp
+usr
+var
+PS C:\Users\User>
+PS C:\Users\User>
+PS C:\Users\User>
+PS C:\Users\User>
+PS C:\Users\User> kubectl top pod busybox1 --containers
+error: Metrics API not available
