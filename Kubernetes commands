@@ -1236,3 +1236,1099 @@ PS C:\Users\User>
 PS C:\Users\User>
 PS C:\Users\User> kubectl top pod busybox1 --containers
 error: Metrics API not available
+
+
+
+
+
+
+
+
+37. Create 5 nginx pods in which two of them is labeled env=prod and three of them is labeled env=dev
+
+controlplane $ kubectl run nginx-dev1 --image=nginx --restart=Never --labels=env=dev
+pod/nginx-dev1 created
+controlplane $ kubectl run nginx-dev2 --image=nginx --restart=Never --labels=env=dev
+pod/nginx-dev2 created
+controlplane $ kubectl run nginx-dev3 --image=nginx --restart=Never --labels=env=dev
+pod/nginx-dev3 created
+controlplane $ kubectl run nginx-prod1 --image=nginx --restart=Never --labels=env=prod
+pod/nginx-prod1 created
+controlplane $ kubectl run nginx-prod2 --image=nginx --restart=Never --labels=env=prod
+pod/nginx-prod2 created
+
+
+
+38. Verify all the pods are created with correct labels
+
+controlplane $ kubectl get pods --show-labels
+NAME          READY   STATUS    RESTARTS   AGE   LABELS
+nginx-dev1    1/1     Running   0          44s   env=dev
+nginx-dev2    1/1     Running   0          44s   env=dev
+nginx-dev3    1/1     Running   0          44s   env=dev
+nginx-prod1   1/1     Running   0          44s   env=prod
+nginx-prod2   1/1     Running   0          42s   env=prod
+controlplane $
+
+
+
+
+
+
+39. Get the pods with label env=dev
+
+controlplane $ kubectl get pods -l env=dev
+NAME         READY   STATUS    RESTARTS   AGE
+nginx-dev1   1/1     Running   0          3m8s
+nginx-dev2   1/1     Running   0          3m8s
+nginx-dev3   1/1     Running   0          3m8s
+controlplane $
+
+
+40. Get the pods with label env=dev and also output the labels
+
+controlplane $ kubectl get pods -l env=dev --show-labels
+NAME         READY   STATUS    RESTARTS   AGE     LABELS
+nginx-dev1   1/1     Running   0          3m40s   env=dev
+nginx-dev2   1/1     Running   0          3m40s   env=dev
+nginx-dev3   1/1     Running   0          3m40s   env=dev
+controlplane $ 
+
+
+
+
+41. Get the pods with label env=prod
+
+controlplane $ kubectl get pods -l env=prod
+NAME          READY   STATUS    RESTARTS   AGE
+nginx-prod1   1/1     Running   0          4m26s
+nginx-prod2   1/1     Running   0          4m24s
+controlplane $ 
+
+
+
+
+42. Get the pods with label env=prod and also output the labels
+
+controlplane $ kubectl get pods -l env=prod --show-labels
+NAME          READY   STATUS    RESTARTS   AGE     LABELS
+nginx-prod1   1/1     Running   0          4m41s   env=prod
+nginx-prod2   1/1     Running   0          4m39s   env=prod
+controlplane $ 
+
+
+
+43. Get the pods with label env
+
+controlplane $ kubectl get pods -L env
+NAME          READY   STATUS    RESTARTS   AGE     ENV
+nginx-dev1    1/1     Running   0          5m31s   dev
+nginx-dev2    1/1     Running   0          5m31s   dev
+nginx-dev3    1/1     Running   0          5m31s   dev
+nginx-prod1   1/1     Running   0          5m31s   prod
+nginx-prod2   1/1     Running   0          5m29s   prod
+controlplane $
+
+
+
+44. Get the pods with labels env=dev and env=prod
+
+controlplane $ kubectl get pods -l 'env in (dev,prod)'
+NAME          READY   STATUS    RESTARTS   AGE
+nginx-dev1    1/1     Running   0          6m47s
+nginx-dev2    1/1     Running   0          6m47s
+nginx-dev3    1/1     Running   0          6m47s
+nginx-prod1   1/1     Running   0          6m47s
+nginx-prod2   1/1     Running   0          6m45s
+controlplane $
+
+
+
+
+
+45. Get the pods with labels env=dev and env=prod and output the labels as well
+
+controlplane $ kubectl get pods -l 'env in (dev,prod)' --show-labels
+NAME          READY   STATUS    RESTARTS   AGE     LABELS
+nginx-dev1    1/1     Running   0          7m34s   env=dev
+nginx-dev2    1/1     Running   0          7m34s   env=dev
+nginx-dev3    1/1     Running   0          7m34s   env=dev
+nginx-prod1   1/1     Running   0          7m34s   env=prod
+nginx-prod2   1/1     Running   0          7m32s   env=prod
+controlplane $ 
+
+
+
+46. Change the label for one of the pod to env=uat and list all the pods to verify
+
+
+controlplane $ kubectl label pod/nginx-dev3 env=uat --overwrite
+pod/nginx-dev3 labeled
+
+
+controlplane $ kubectl get pods --show-labels
+NAME          READY   STATUS    RESTARTS   AGE    LABELS
+nginx-dev1    1/1     Running   0          8m3s   env=dev
+nginx-dev2    1/1     Running   0          8m3s   env=dev
+nginx-dev3    1/1     Running   0          8m3s   env=uat
+nginx-prod1   1/1     Running   0          8m3s   env=prod
+nginx-prod2   1/1     Running   0          8m1s   env=prod
+controlplane $ 
+
+
+
+47. Remove the labels for the pods that we created now and verify all the labels are removed
+
+ontrolplane $ kubectl label pod nginx-dev{1..3} env-
+pod/nginx-dev1 unlabeled
+pod/nginx-dev2 unlabeled
+pod/nginx-dev3 unlabeled
+
+
+controlplane $ kubectl label pod nginx-prod{1..2} env-
+pod/nginx-prod1 unlabeled
+pod/nginx-prod2 unlabeled
+
+
+controlplane $ kubectl get po --show-labels
+NAME          READY   STATUS    RESTARTS   AGE   LABELS
+nginx-dev1    1/1     Running   0          10m   <none>
+nginx-dev2    1/1     Running   0          10m   <none>
+nginx-dev3    1/1     Running   0          10m   <none>
+nginx-prod1   1/1     Running   0          10m   <none>
+nginx-prod2   1/1     Running   0          10m   <none>
+controlplane $ 
+
+
+
+48. Let’s add the label app=nginx for all the pods and verify
+
+controlplane $ kubectl label pod nginx-dev{1..3} app=nginx
+pod/nginx-dev1 labeled
+pod/nginx-dev2 labeled
+pod/nginx-dev3 labeled
+
+
+controlplane $ kubectl label pod nginx-prod{1..2} app=nginx
+pod/nginx-prod1 labeled
+pod/nginx-prod2 labeled
+
+
+controlplane $ kubectl get po --show-labels
+NAME          READY   STATUS    RESTARTS   AGE   LABELS
+nginx-dev1    1/1     Running   0          13m   app=nginx
+nginx-dev2    1/1     Running   0          13m   app=nginx
+nginx-dev3    1/1     Running   0          13m   app=nginx
+nginx-prod1   1/1     Running   0          13m   app=nginx
+nginx-prod2   1/1     Running   0          13m   app=nginx
+controlplane $
+
+
+
+controlplane $ kubectl label pod nginx-prod{1..2} tst=test1 
+pod/nginx-prod1 labeled
+pod/nginx-prod2 labeled
+controlplane $ 
+
+
+controlplane $ 
+controlplane $ kubectl get po --show-labels
+NAME          READY   STATUS    RESTARTS   AGE   LABELS
+nginx-dev1    1/1     Running   0          14m   app=nginx
+nginx-dev2    1/1     Running   0          14m   app=nginx
+nginx-dev3    1/1     Running   0          14m   app=nginx
+nginx-prod1   1/1     Running   0          14m   app=nginx,tst=test1
+nginx-prod2   1/1     Running   0          14m   app=nginx,tst=test1
+controlplane $ 
+
+
+49.  Get all the nodes with labels (if using minikube you would get only master node)
+
+controlplane $ kubectl get nodes --show-labels
+NAME           STATUS   ROLES           AGE   VERSION   LABELS
+controlplane   Ready    control-plane   30d   v1.26.1   beta.kubernetes.io/arch=amd64,beta.kubernetes.io/os=linux,kubernetes.io/arch=amd64,kubernetes.io/hostname=controlplane,kubernetes.io/os=linux,node-role.kubernetes.io/control-plane=,node.kubernetes.io/exclude-from-external-load-balancers=
+node01         Ready    <none>          30d   v1.26.1   beta.kubernetes.io/arch=amd64,beta.kubernetes.io/os=linux,kubernetes.io/arch=amd64,kubernetes.io/hostname=node01,kubernetes.io/os=linux
+controlplane $
+
+
+50. Label the node (minikube if you are using) nodeName=nginxnode
+
+controlplane $ kubectl label node node01 nodeName=nginxnode
+node/node01 labeled
+controlplane $ 
+
+
+controlplane $ 
+controlplane $ kubectl get nodes --show-labels
+NAME           STATUS   ROLES           AGE   VERSION   LABELS
+controlplane   Ready    control-plane   30d   v1.26.1   beta.kubernetes.io/arch=amd64,beta.kubernetes.io/os=linux,kubernetes.io/arch=amd64,kubernetes.io/hostname=controlplane,kubernetes.io/os=linux,node-role.kubernetes.io/control-plane=,node.kubernetes.io/exclude-from-external-load-balancers=
+node01         Ready    <none>          30d   v1.26.1   beta.kubernetes.io/arch=amd64,beta.kubernetes.io/os=linux,kubernetes.io/arch=amd64,kubernetes.io/hostname=node01,kubernetes.io/os=linux,nodeName=nginxnode
+controlplane $
+
+
+51.  Create a Pod that will be deployed on this node with the label nodeName=nginxnode
+
+controlplane $ kubectl run nginx --image=nginx --restart=Never --dry-run=client -o yaml > pod.yaml
+controlplane $
+
+
+Add the nodeSelector part in the file pod.yaml
+
+apiVersion: v1
+kind: Pod
+metadata:
+  creationTimestamp: null
+  labels:
+    run: nginx
+  name: nginx
+spec:
+  nodeSelector:
+    nodeName: nginxnode
+  containers:
+  - image: nginx
+    name: nginx
+    resources: {}
+  dnsPolicy: ClusterFirst
+  restartPolicy: Never
+status: {}
+
+
+controlplane $ kubectl create -f pod.yaml
+pod/nginx created
+controlplane $
+
+
+52.  Verify the pod that it is scheduled with the node selector
+
+controlplane $ kubectl describe po nginx | grep Node-Selectors
+Node-Selectors:              nodeName=nginxnode
+controlplane $
+
+
+
+53. Verify the pod nginx that we just created has this label
+
+controlplane $ kubectl describe po nginx | grep Labels
+Labels:           run=nginx
+controlplane $
+
+
+
+
+
+
+
+54. Annotate the pods with name=webapp
+
+kubectl annotate pod nginx-dev{1..3} name=webapp
+kubectl annotate pod nginx-prod{1..2} name=webapp
+
+
+
+
+
+
+
+
+
+
+
+
+
+55. Verify the pods that have been annotated correctly
+
+controlplane $ kubectl describe po nginx-dev{1..3} | grep -i annotations
+Annotations:      cni.projectcalico.org/containerID: 49ae56fa9a4a0ab6238240609b2e5f6a817d8e5e5fdeefa9e5d2ca2547895c8d
+Annotations:      cni.projectcalico.org/containerID: aaec163c984fec45e1cfc089ea12081a137d5816a6787edf2c114a6c9f2a2e3a
+Annotations:      cni.projectcalico.org/containerID: 9d98204d3be189c16e3b9aba375ef0c9d498c75dc57c683900a17a36ed347762
+
+
+controlplane $ kubectl describe po nginx-prod{1..2} | grep -i annotations
+Annotations:      cni.projectcalico.org/containerID: 360a95f750c102e08aa56bf221a6b3e5c0b5c7c384c7b462b33479482c7bd7eb
+Annotations:      cni.projectcalico.org/containerID: cd573f84c9421459dd8d2b92caba1907390f7b5e5bf72e1dfca14f1d57353a63
+controlplane $
+
+
+
+
+
+
+
+
+
+
+56.  Remove the annotations on the pods and verify
+
+controlplane $ kubectl annotate pod nginx-dev{1..3} name-
+pod/nginx-dev1 annotated
+pod/nginx-dev2 annotated
+pod/nginx-dev3 annotated
+
+
+controlplane $ kubectl annotate pod nginx-prod{1..2} name-
+pod/nginx-prod1 annotated
+pod/nginx-prod2 annotated
+
+
+controlplane $ kubectl describe po nginx-dev{1..3} | grep -i annotations
+Annotations:      cni.projectcalico.org/containerID: 49ae56fa9a4a0ab6238240609b2e5f6a817d8e5e5fdeefa9e5d2ca2547895c8d
+Annotations:      cni.projectcalico.org/containerID: aaec163c984fec45e1cfc089ea12081a137d5816a6787edf2c114a6c9f2a2e3a
+Annotations:      cni.projectcalico.org/containerID: 9d98204d3be189c16e3b9aba375ef0c9d498c75dc57c683900a17a36ed347762
+
+
+controlplane $ kubectl describe po nginx-prod{1..2} | grep -i annotations
+Annotations:      cni.projectcalico.org/containerID: 360a95f750c102e08aa56bf221a6b3e5c0b5c7c384c7b462b33479482c7bd7eb
+Annotations:      cni.projectcalico.org/containerID: cd573f84c9421459dd8d2b92caba1907390f7b5e5bf72e1dfca14f1d57353a63
+controlplane $ 
+
+
+
+
+57. Remove all the pods that we created so far
+
+controlplane $ kubectl delete po --all
+pod "nginx" deleted
+pod "nginx-dev1" deleted
+pod "nginx-dev2" deleted
+pod "nginx-dev3" deleted
+pod "nginx-prod1" deleted
+pod "nginx-prod2" deleted
+
+controlplane $ 
+
+
+
+58. Create a deployment called webapp with image nginx with 5 replicas
+
+controlplane $ kubectl create deploy webapp --image=nginx --dry-run=client -o yaml > webapp.yaml
+
+change the replicas to 5 and then run
+
+controlplane $ kubectl create -f webapp.yaml
+deployment.apps/webapp created
+controlplane $
+
+
+
+59. Get the deployment you just created with labels
+
+controlplane $ kubectl get deploy webapp --show-labels
+NAME     READY   UP-TO-DATE   AVAILABLE   AGE   LABELS
+webapp   5/5     5            5           69s   app=webapp
+controlplane $ 
+
+
+60. Output the yaml file of the deployment you just created
+
+controlplane $ kubectl get deploy webapp -o yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  annotations:
+    deployment.kubernetes.io/revision: "1"
+  creationTimestamp: "2023-03-26T03:14:52Z"
+  generation: 1
+  labels:
+    app: webapp
+  name: webapp
+  namespace: default
+  resourceVersion: "6767"
+  uid: 6ab88104-f0e0-4034-85cc-9d85005128a8
+spec:
+  progressDeadlineSeconds: 600
+  replicas: 5
+  revisionHistoryLimit: 10
+  selector:
+    matchLabels:
+      app: webapp
+  strategy:
+    rollingUpdate:
+      maxSurge: 25%
+      maxUnavailable: 25%
+    type: RollingUpdate
+  template:
+    metadata:
+      creationTimestamp: null
+      labels:
+        app: webapp
+    spec:
+      containers:
+      - image: nginx
+        imagePullPolicy: Always
+        name: nginx
+        resources: {}
+        terminationMessagePath: /dev/termination-log
+        terminationMessagePolicy: File
+      dnsPolicy: ClusterFirst
+      restartPolicy: Always
+      schedulerName: default-scheduler
+      securityContext: {}
+      terminationGracePeriodSeconds: 30
+status:
+  availableReplicas: 5
+  conditions:
+  - lastTransitionTime: "2023-03-26T03:15:00Z"
+    lastUpdateTime: "2023-03-26T03:15:00Z"
+    message: Deployment has minimum availability.
+    reason: MinimumReplicasAvailable
+    status: "True"
+    type: Available
+  - lastTransitionTime: "2023-03-26T03:14:52Z"
+    lastUpdateTime: "2023-03-26T03:15:01Z"
+    message: ReplicaSet "webapp-754bcc647d" has successfully progressed.
+    reason: NewReplicaSetAvailable
+    status: "True"
+    type: Progressing
+  observedGeneration: 1
+  readyReplicas: 5
+  replicas: 5
+  updatedReplicas: 5
+controlplane $
+
+
+
+
+61. Get the pods of this deployment
+
+controlplane $ kubectl get deploy --show-labels
+NAME     READY   UP-TO-DATE   AVAILABLE   AGE     LABELS
+webapp   5/5     5            5           2m17s   app=webapp
+controlplane $ 
+controlplane $ 
+controlplane $ 
+controlplane $ 
+controlplane $ kubectl get pods -l app=webapp
+NAME                      READY   STATUS    RESTARTS   AGE
+webapp-754bcc647d-2prxx   1/1     Running   0          2m42s
+webapp-754bcc647d-h2l4g   1/1     Running   0          2m42s
+webapp-754bcc647d-hv522   1/1     Running   0          2m42s
+webapp-754bcc647d-p8rpq   1/1     Running   0          2m42s
+webapp-754bcc647d-xfw6h   1/1     Running   0          2m42s
+controlplane $
+
+
+
+62. Scale the deployment from 5 replicas to 20 replicas and verify
+
+controlplane $ kubectl scale deploy webapp --replicas=20
+deployment.apps/webapp scaled
+controlplane $ kubectl get po -l app=webapp
+NAME                      READY   STATUS              RESTARTS   AGE
+webapp-754bcc647d-2prxx   1/1     Running             0          3m14s
+webapp-754bcc647d-4w5v9   0/1     ContainerCreating   0          1s
+webapp-754bcc647d-54w26   0/1     ContainerCreating   0          1s
+webapp-754bcc647d-9brpr   0/1     ContainerCreating   0          1s
+webapp-754bcc647d-9h24h   0/1     ContainerCreating   0          1s
+webapp-754bcc647d-b22qj   0/1     Pending             0          1s
+webapp-754bcc647d-dwtsq   0/1     ContainerCreating   0          1s
+webapp-754bcc647d-fr9qv   0/1     ContainerCreating   0          1s
+webapp-754bcc647d-h2l4g   1/1     Running             0          3m14s
+webapp-754bcc647d-h6m94   0/1     Pending             0          1s
+webapp-754bcc647d-hv522   1/1     Running             0          3m14s
+webapp-754bcc647d-jsmb6   0/1     Pending             0          1s
+webapp-754bcc647d-k48fl   0/1     ContainerCreating   0          1s
+webapp-754bcc647d-mphzx   0/1     Pending             0          1s
+webapp-754bcc647d-p8rpq   1/1     Running             0          3m14s
+webapp-754bcc647d-ptrcf   0/1     Pending             0          1s
+webapp-754bcc647d-x6cb4   0/1     ContainerCreating   0          1s
+webapp-754bcc647d-xdzlj   0/1     ContainerCreating   0          1s
+webapp-754bcc647d-xfw6h   1/1     Running             0          3m14s
+webapp-754bcc647d-zfzct   0/1     ContainerCreating   0          1s
+controlplane $ 
+
+
+
+63. Get the deployment rollout status
+
+controlplane $ kubectl rollout status deploy webapp
+deployment "webapp" successfully rolled out
+controlplane 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+64. Get the replicaset that created with this deployment
+
+controlplane $ kubectl get rs -l app=webapp
+NAME                DESIRED   CURRENT   READY   AGE
+webapp-754bcc647d   20        20        20      5m26s
+controlplane $
+
+
+65. Get the yaml of the replicaset and pods of this deployment
+
+controlplane $ kubectl get rs -l app=webapp -o yaml
+apiVersion: v1
+items:
+- apiVersion: apps/v1
+  kind: ReplicaSet
+  metadata:
+    annotations:
+      deployment.kubernetes.io/desired-replicas: "20"
+      deployment.kubernetes.io/max-replicas: "25"
+      deployment.kubernetes.io/revision: "1"
+    creationTimestamp: "2023-03-26T03:14:52Z"
+    generation: 2
+    labels:
+      app: webapp
+      pod-template-hash: 754bcc647d
+    name: webapp-754bcc647d
+    namespace: default
+    ownerReferences:
+    - apiVersion: apps/v1
+      blockOwnerDeletion: true
+      controller: true
+      kind: Deployment
+      name: webapp
+      uid: 6ab88104-f0e0-4034-85cc-9d85005128a8
+    resourceVersion: "7237"
+    uid: 670c764e-785d-42f6-bbe8-def4aa3506d9
+  spec:
+    replicas: 20
+    selector:
+      matchLabels:
+        app: webapp
+        pod-template-hash: 754bcc647d
+    template:
+      metadata:
+        creationTimestamp: null
+        labels:
+          app: webapp
+          pod-template-hash: 754bcc647d
+      spec:
+        containers:
+        - image: nginx
+          imagePullPolicy: Always
+          name: nginx
+          resources: {}
+          terminationMessagePath: /dev/termination-log
+          terminationMessagePolicy: File
+        dnsPolicy: ClusterFirst
+        restartPolicy: Always
+        schedulerName: default-scheduler
+        securityContext: {}
+        terminationGracePeriodSeconds: 30
+  status:
+    availableReplicas: 20
+    fullyLabeledReplicas: 20
+    observedGeneration: 2
+    readyReplicas: 20
+    replicas: 20
+kind: List
+metadata:
+  resourceVersion: ""
+controlplane 
+
+
+
+
+
+controlplane $ kubectl get po -l app=webapp -o yaml
+apiVersion: v1
+items:
+- apiVersion: v1
+  kind: Pod
+  metadata:
+    annotations:
+      cni.projectcalico.org/containerID: 661f537fd96a205dd8748461520f48e5345803f4ea51fd08b76ede4616450527
+      cni.projectcalico.org/podIP: 192.168.1.9/32
+      cni.projectcalico.org/podIPs: 192.168.1.9/32
+    creationTimestamp: "2023-03-26T03:14:52Z"
+    generateName: webapp-754bcc647d-
+    labels:
+      app: webapp
+      pod-template-hash: 754bcc647d
+    name: webapp-754bcc647d-2prxx
+    namespace: default
+    ownerReferences:
+    - apiVersion: apps/v1
+      blockOwnerDeletion: true
+      controller: true
+      kind: ReplicaSet
+      name: webapp-754bcc647d
+      uid: 670c764e-785d-42f6-bbe8-def4aa3506d9
+    resourceVersion: "6744"
+    uid: da383564-aafc-4eac-bf97-6b0b121342cd
+  spec:
+    containers:
+    - image: nginx
+      imagePullPolicy: Always
+      name: nginx
+      resources: {}
+      terminationMessagePath: /dev/termination-log
+      terminationMessagePolicy: File
+      volumeMounts:
+      - mountPath: /var/run/secrets/kubernetes.io/serviceaccount
+        name: kube-api-access-gvr27
+        readOnly: true
+    dnsPolicy: ClusterFirs
+    enableServiceLinks: true
+	
+	.
+	.
+	.
+	.
+- apiVersion: v1
+  kind: Pod
+  metadata:
+    annotations:
+      cni.projectcalico.org/containerID: 532eda24a66e46f666f898023a2cbf836f03448033e8c96e6ef89b03eceeeafd
+      cni.projectcalico.org/podIP: 192.168.1.13/32
+      cni.projectcalico.org/podIPs: 192.168.1.13/32
+    creationTimestamp: "2023-03-26T03:18:05Z"
+    generateName: webapp-754bcc647d-
+    labels:
+      app: webapp
+      pod-template-hash: 754bcc647d
+    name: webapp-754bcc647d-zfzct
+    namespace: default
+    ownerReferences:
+    - apiVersion: apps/v1
+      blockOwnerDeletion: true
+      controller: true
+      kind: ReplicaSet
+      name: webapp-754bcc647d
+      uid: 670c764e-785d-42f6-bbe8-def4aa3506d9
+    resourceVersion: "7154"
+    uid: 99791b78-7c51-437f-94a9-d2b11efc6b43
+  spec:
+    containers:
+    - image: nginx
+      imagePullPolicy: Always
+      name: nginx
+      resources: {}
+      terminationMessagePath: /dev/termination-log
+      terminationMessagePolicy: File
+      volumeMounts:
+      - mountPath: /var/run/secrets/kubernetes.io/serviceaccount
+        name: kube-api-access-g424j
+        readOnly: true
+    dnsPolicy: ClusterFirst
+    enableServiceLinks: true
+    nodeName: node01
+    preemptionPolicy: PreemptLowerPriority
+    priority: 0
+    restartPolicy: Always
+    schedulerName: default-scheduler
+    securityContext: {}
+    serviceAccount: default
+    serviceAccountName: default
+    terminationGracePeriodSeconds: 30
+    tolerations:
+    - effect: NoExecute
+      key: node.kubernetes.io/not-ready
+      operator: Exists
+      tolerationSeconds: 300
+    - effect: NoExecute
+      key: node.kubernetes.io/unreachable
+      operator: Exists
+      tolerationSeconds: 300
+    volumes:
+    - name: kube-api-access-g424j
+      projected:
+        defaultMode: 420
+        sources:
+        - serviceAccountToken:
+            expirationSeconds: 3607
+            path: token
+        - configMap:
+            items:
+            - key: ca.crt
+              path: ca.crt
+            name: kube-root-ca.crt
+        - downwardAPI:
+            items:
+            - fieldRef:
+                apiVersion: v1
+                fieldPath: metadata.namespace
+              path: namespace
+  status:
+    conditions:
+    - lastProbeTime: null
+      lastTransitionTime: "2023-03-26T03:18:05Z"
+      status: "True"
+      type: Initialized
+    - lastProbeTime: null
+      lastTransitionTime: "2023-03-26T03:18:08Z"
+      status: "True"
+      type: Ready
+    - lastProbeTime: null
+      lastTransitionTime: "2023-03-26T03:18:08Z"
+      status: "True"
+      type: ContainersReady
+    - lastProbeTime: null
+      lastTransitionTime: "2023-03-26T03:18:05Z"
+      status: "True"
+      type: PodScheduled
+    containerStatuses:
+    - containerID: containerd://9d9b89e57cc267817b45c0b8cce0cd2ba22d1554608e011bc1e38d23e2338b03
+      image: docker.io/library/nginx:latest
+      imageID: docker.io/library/nginx@sha256:f4e3b6489888647ce1834b601c6c06b9f8c03dee6e097e13ed3e28c01ea3ac8c
+      lastState: {}
+      name: nginx
+      ready: true
+      restartCount: 0
+      started: true
+      state:
+        running:
+          startedAt: "2023-03-26T03:18:08Z"
+    hostIP: 172.30.2.2
+    phase: Running
+    podIP: 192.168.1.13
+    podIPs:
+    - ip: 192.168.1.13
+    qosClass: BestEffort
+    startTime: "2023-03-26T03:18:05Z"
+kind: List
+metadata:
+  resourceVersion: ""
+controlplane $
+
+
+
+
+
+66. Delete the deployment you just created and watch all the pods are also being deleted
+
+controlplane $ 
+controlplane $ kubectl delete deploy webapp
+
+deployment.apps "webapp" deleted
+
+
+
+controlplane $ kubectl get po -l app=webapp
+No resources found in default namespace.
+controlplane $ 
+controlplane $
+
+
+
+
+67. Create a deployment of webapp with image nginx:1.17.1 with container port 80 and verify the image version
+
+
+controlplane $ kubectl create deploy webapp --image=nginx:1.17.1 --dry-run=client -o yaml > webapp.yaml
+controlplane $ 
+controlplane $ 
+controlplane $ ls
+filesystem  webapp.yaml
+controlplane $ 
+controlplane $ 
+controlplane $ kubectl create -f webapp.yaml
+deployment.apps/webapp created
+controlplane $ 
+controlplane $ 
+controlplane $ kubectl describe deploy webapp | grep Image
+    Image:        nginx:1.17.1
+controlplane $ 
+
+
+
+68. Update the deployment with the image version 1.17.4 and verify
+
+controlplane $ kubectl set image deploy/webapp nginx=nginx:1.17.4
+deployment.apps/webapp image updated
+controlplane $ 
+controlplane $ 
+controlplane $ kubectl describe deploy webapp | grep Image
+    Image:        nginx:1.17.4
+controlplane $ 
+controlplane $
+
+
+69. Check the rollout history and make sure everything is ok after the update
+
+controlplane $ kubectl rollout history deploy webapp
+deployment.apps/webapp 
+REVISION  CHANGE-CAUSE
+1         <none>
+2         <none>
+
+controlplane $ 
+controlplane $ 
+controlplane $ kubectl get deploy webapp --show-labels
+NAME     READY   UP-TO-DATE   AVAILABLE   AGE     LABELS
+webapp   1/1     1            1           3m48s   app=webapp
+controlplane $ 
+controlplane $ 
+controlplane $ kubectl get rs -l app=webapp
+NAME                DESIRED   CURRENT   READY   AGE
+webapp-8694f5cb9c   1         1         1       110s
+webapp-c6cc4c674    0         0         0       4m16s
+controlplane $ 
+controlplane $ 
+controlplane $ 
+controlplane $ kubectl get po -l app=webapp
+NAME                      READY   STATUS    RESTARTS   AGE
+webapp-8694f5cb9c-4t8sg   1/1     Running   0          2m11s
+controlplane $ 
+controlplane $ 
+controlplane $ 
+
+
+70. Undo the deployment to the previous version 1.17.1 and verify Image has the previous version
+
+controlplane $ kubectl rollout undo deploy webapp
+deployment.apps/webapp rolled back
+controlplane $ 
+controlplane $ 
+controlplane $ 
+controlplane $ kubectl describe deploy webapp | grep Image
+    Image:        nginx:1.17.1
+controlplane $ 
+controlplane $
+
+
+
+
+71. Update the deployment with the image version 1.16.1 and verify the image and also check the rollout history
+
+controlplane $ kubectl set image deploy/webapp nginx=nginx:1.16.1
+deployment.apps/webapp image updated
+controlplane $ 
+controlplane $ 
+controlplane $ kubectl describe deploy webapp | grep Image
+    Image:        nginx:1.16.1
+controlplane $ 
+controlplane $ 
+controlplane $ kubectl rollout history deploy webapp
+deployment.apps/webapp 
+REVISION  CHANGE-CAUSE
+2         <none>
+3         <none>
+4         <none>
+
+controlplane $
+
+
+72 . Update the deployment to the Image 1.17.1 and verify everything is ok
+
+controlplane $ kubectl rollout undo deploy webapp --to-revision=3
+deployment.apps/webapp rolled back
+controlplane $ 
+controlplane $ 
+controlplane $ kubectl describe deploy webapp | grep Image
+    Image:        nginx:1.17.1
+controlplane $ 
+controlplane $ 
+controlplane $ 
+controlplane $ kubectl rollout status deploy webapp
+deployment "webapp" successfully rolled out
+controlplane $ 
+controlplane $ 
+
+
+
+
+73. Update the deployment with the wrong image version 1.100 and verify something is wrong with the deployment
+
+controlplane $ kubectl set image deploy/webapp nginx=ngins:1.100
+deployment.apps/webapp image updated
+controlplane $ 
+controlplane $ 
+controlplane $ kubectl describe deploy webapp | grep Image
+    Image:        ngins:1.100
+controlplane $ 
+controlplane $
+controlplane $ kubectl rollout status deploy webapp
+Waiting for deployment "webapp" rollout to finish: 1 old replicas are pending termination...
+^Ccontrolplane $ 
+controlplane $ 
+controlplane $ kubectl get pods
+NAME                      READY   STATUS             RESTARTS   AGE
+webapp-779f5b68fc-7spt8   0/1     ImagePullBackOff   0          3m44s
+webapp-c758549-wb642      1/1     Running            0          5m28s
+controlplane $ 
+
+
+
+74. Undo the deployment with the previous version and verify everything is Ok
+
+controlplane $ kubectl rollout undo deploy webapp
+deployment.apps/webapp rolled back
+controlplane $ 
+controlplane $ 
+controlplane $ kubectl describe deploy webapp | grep Image
+    Image:        nginx:1.17.1
+controlplane $ 
+controlplane $ 
+controlplane $ kubectl rollout status deploy webapp
+deployment "webapp" successfully rolled out
+controlplane $ 
+controlplane $ 
+controlplane $ kubectl get pods
+NAME                     READY   STATUS    RESTARTS   AGE
+webapp-c6cc4c674-4l65g   1/1     Running   0          3m8s
+controlplane $
+
+
+
+75.  Check the history of the specific revision of that deployment
+
+controlplane $ kubectl rollout history deploy webapp --revision=7
+deployment.apps/webapp with revision #7
+Pod Template:
+  Labels:       app=webapp
+        pod-template-hash=7746fbfc6
+  Containers:
+   nginx:
+    Image:      nginx=1.16.1
+    Port:       <none>
+    Host Port:  <none>
+    Environment:        <none>
+    Mounts:     <none>
+  Volumes:      <none>
+
+controlplane 
+
+
+76. Pause the rollout of the deployment
+
+controlplane $ kubectl rollout pause deploy webapp
+deployment.apps/webapp paused
+controlplane $ 
+
+
+
+77. Update the deployment with the image version latest and check the history and verify nothing is going on
+
+
+controlplane $ kubectl rollout history deploy/webapp
+deployment.apps/webapp 
+REVISION  CHANGE-CAUSE
+2         <none>
+4         <none>
+5         <none>
+6         <none>
+7         <none>
+9         <none>
+10        <none>
+
+controlplane $ 
+controlplane $ 
+controlplane $ kubectl set image deploy/webapp nginx=nginx:latest
+deployment.apps/webapp image updated
+controlplane $ 
+controlplane $ 
+controlplane $ 
+controlplane $ 
+controlplane $ kubectl rollout history deploy/webapp
+deployment.apps/webapp 
+REVISION  CHANGE-CAUSE
+2         <none>
+4         <none>
+5         <none>
+6         <none>
+7         <none>
+9         <none>
+10        <none>
+
+
+
+78. Resume the rollout of the deployment
+
+controlplane $ kubectl rollout resume deploy webapp
+deployment.apps/webapp resumed
+controlplane $ 
+controlplane $
+
+
+79. Check the rollout history and verify it has the new version
+
+controlplane $ kubectl rollout history deploy webapp
+deployment.apps/webapp 
+REVISION  CHANGE-CAUSE
+2         <none>
+4         <none>
+5         <none>
+6         <none>
+7         <none>
+9         <none>
+10        <none>
+11        <none>
+
+controlplane $ 
+controlplane $ kubectl rollout history deploy webapp --revision=11
+deployment.apps/webapp with revision #11
+Pod Template:
+  Labels:       app=webapp
+        pod-template-hash=866655f4cf
+  Containers:
+   nginx:
+    Image:      nginx:latest
+    Port:       <none>
+    Host Port:  <none>
+    Environment:        <none>
+    Mounts:     <none>
+  Volumes:      <none>
+
+controlplane $ 
+
+
+80. Apply the autoscaling to this deployment with minimum 10 and maximum 20 replicas and target CPU of 85%
+and verify hpa is created and replicas are increased to 10 from 1
+
+controlplane $ kubectl autoscale deploy webapp --min=10 --max=20 --cpu-percent=85
+horizontalpodautoscaler.autoscaling/webapp autoscaled
+controlplane $ 
+controlplane $ 
+controlplane $
+controlplane $ kubectl get hpa
+NAME     REFERENCE           TARGETS         MINPODS   MAXPODS   REPLICAS   AGE
+webapp   Deployment/webapp   <unknown>/85%   10        20        10         42s
+controlplane $ 
+controlplane $ 
+controlplane $ 
+controlplane $ kubectl get pod -l app=webapp
+NAME                      READY   STATUS    RESTARTS   AGE
+webapp-866655f4cf-2n6tf   1/1     Running   0          18s
+webapp-866655f4cf-4vl26   1/1     Running   0          18s
+webapp-866655f4cf-5wblt   1/1     Running   0          18s
+webapp-866655f4cf-7j48b   1/1     Running   0          6m1s
+webapp-866655f4cf-d2tqr   1/1     Running   0          18s
+webapp-866655f4cf-dfbpj   1/1     Running   0          18s
+webapp-866655f4cf-jh2zw   1/1     Running   0          17s
+webapp-866655f4cf-m84z6   1/1     Running   0          18s
+webapp-866655f4cf-q2vlm   1/1     Running   0          18s
+webapp-866655f4cf-sz2xf   1/1     Running   0          17s
+controlplane $
+
+
+
+81.  Clean the cluster by deleting deployment and hpa you just created
+
+controlplane $ kubectl delete deploy webapp
+deployment.apps "webapp" deleted
+controlplane $ 
+controlplane $ 
+controlplane $ kubectl get deploy webapp
+Error from server (NotFound): deployments.apps "webapp" not found
+controlplane $ 
+controlplane $ kubectl get hpa          
+NAME     REFERENCE           TARGETS         MINPODS   MAXPODS   REPLICAS   AGE
+webapp   Deployment/webapp   <unknown>/85%   10        20        10         6m34s
+controlplane $ 
+controlplane $ 
+controlplane $ kubectl delete hpa webapp
+horizontalpodautoscaler.autoscaling "webapp" deleted
+controlplane $ 
+controlplane $ 
+
+
+
+
+
+
+
+
