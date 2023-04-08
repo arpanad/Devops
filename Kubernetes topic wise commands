@@ -1,0 +1,842 @@
+4. Simple Pod Creation ... Imperative and Declarative way
+==========================================================
+
+
+Creating pod Declarative way by writing the file:
+
+Create a yaml file  with the contents as below
+controlplane $ vi definition.yaml 
+controlplane $ cat definition.yaml
+apiVersion: v1
+kind: Pod
+metadata:
+  name: static-web
+  labels:
+    env: prod
+spec:
+  containers:
+    - name: web
+      image: nginx
+
+
+Use the below command to create the pod :
+
+controlplane $ kubectl apply -f definition.yaml 
+pod/static-web created
+
+
+To list the pods thats created :
+
+controlplane $ kubectl get pod
+NAME         READY   STATUS    RESTARTS   AGE
+static-web   1/1     Running   0          2m29s
+
+
+Details/Description of pod :
+
+controlplane $ kubectl describe pod static-web 
+Name:             static-web
+Namespace:        default
+Priority:         0
+Service Account:  default
+Node:             node01/172.30.2.2
+Start Time:       Fri, 07 Apr 2023 14:33:13 +0000
+Labels:           env=prod
+Annotations:      cni.projectcalico.org/containerID: 2b12160150966f4e51ea3e57c0069574ed011b1b481f39713742a62884d3366a
+                  cni.projectcalico.org/podIP: 192.168.1.3/32
+                  cni.projectcalico.org/podIPs: 192.168.1.3/32
+Status:           Running
+IP:               192.168.1.3
+IPs:
+  IP:  192.168.1.3
+Containers:
+  web:
+    Container ID:   containerd://3c206f238d364b4881db23f0580b02ad791c66ef13c1262029e608d390cc644e
+    Image:          nginx
+    Image ID:       docker.io/library/nginx@sha256:2ab30d6ac53580a6db8b657abf0f68d75360ff5cc1670a85acb5bd85ba1b19c0
+    Port:           <none>
+    Host Port:      <none>
+    State:          Running
+      Started:      Fri, 07 Apr 2023 14:33:19 +0000
+    Ready:          True
+    Restart Count:  0
+    Environment:    <none>
+    Mounts:
+      /var/run/secrets/kubernetes.io/serviceaccount from kube-api-access-mspb7 (ro)
+Conditions:
+  Type              Status
+  Initialized       True 
+  Ready             True 
+  ContainersReady   True 
+  PodScheduled      True 
+Volumes:
+  kube-api-access-mspb7:
+    Type:                    Projected (a volume that contains injected data from multiple sources)
+    TokenExpirationSeconds:  3607
+    ConfigMapName:           kube-root-ca.crt
+    ConfigMapOptional:       <nil>
+    DownwardAPI:             true
+QoS Class:                   BestEffort
+Node-Selectors:              <none>
+Tolerations:                 node.kubernetes.io/not-ready:NoExecute op=Exists for 300s
+                             node.kubernetes.io/unreachable:NoExecute op=Exists for 300s
+Events:
+  Type    Reason     Age    From               Message
+  ----    ------     ----   ----               -------
+  Normal  Scheduled  7m44s  default-scheduler  Successfully assigned default/static-web to node01
+  Normal  Pulling    7m44s  kubelet            Pulling image "nginx"
+  Normal  Pulled     7m39s  kubelet            Successfully pulled image "nginx" in 5.253366637s (5.253370595s including waiting)
+  Normal  Created    7m39s  kubelet            Created container web
+  Normal  Started    7m39s  kubelet            Started container web
+controlplane $
+
+
+
+To list details of pod with wide option :
+
+controlplane $ kubectl get pod static-web -o wide
+NAME         READY   STATUS    RESTARTS   AGE     IP            NODE     NOMINATED NODE   READINESS GATES
+static-web   1/1     Running   0          8m50s   192.168.1.3   node01   <none>           <none>
+controlplane $
+
+
+To list the pods with label filter:
+controlplane $ kubectl get pod -l env=prod
+NAME         READY   STATUS    RESTARTS   AGE
+static-web   1/1     Running   0          10m
+controlplane $
+
+
+To find the image details of pod:
+
+controlplane $ kubectl describe pod static-web | grep -i Image
+    Image:          nginx
+    Image ID:       docker.io/library/nginx@sha256:2ab30d6ac53580a6db8b657abf0f68d75360ff5cc1670a85acb5bd85ba1b19c0
+  Normal  Pulling    11m   kubelet            Pulling image "nginx"
+  Normal  Pulled     11m   kubelet            Successfully pulled image "nginx" in 5.253366637s (5.253370595s including waiting)
+controlplane $ kubectl describe pod static-web | grep Image
+    Image:          nginx
+    Image ID:       docker.io/library/nginx@sha256:2ab30d6ac53580a6db8b657abf0f68d75360ff5cc1670a85acb5bd85ba1b19c0
+controlplane $ 
+
+
+Imperative way of creating a pod:
+
+controlplane $ kubectl run simple-pod --image=nginx
+pod/simple-pod created
+controlplane $ kubectl get pod
+NAME         READY   STATUS    RESTARTS   AGE
+simple-pod   1/1     Running   0          19s
+static-web   1/1     Running   0          15m
+controlplane $
+
+
+Declarative way of creating a pod by creating a file:
+
+controlplane $ kubectl run simple-pod1 --image=nginx dry-run=client -o yaml
+apiVersion: v1
+kind: Pod
+metadata:
+  creationTimestamp: "2023-04-07T14:53:11Z"
+  labels:
+    run: simple-pod1
+  name: simple-pod1
+  namespace: default
+  resourceVersion: "4380"
+  uid: 3f2e20d1-fcec-4def-a082-0d0046a6d080
+spec:
+  containers:
+  - args:
+    - dry-run=client
+    image: nginx
+    imagePullPolicy: Always
+    name: simple-pod1
+    resources: {}
+    terminationMessagePath: /dev/termination-log
+    terminationMessagePolicy: File
+    volumeMounts:
+    - mountPath: /var/run/secrets/kubernetes.io/serviceaccount
+      name: kube-api-access-drshh
+      readOnly: true
+  dnsPolicy: ClusterFirst
+  enableServiceLinks: true
+  preemptionPolicy: PreemptLowerPriority
+  priority: 0
+  restartPolicy: Always
+  schedulerName: default-scheduler
+  securityContext: {}
+  serviceAccount: default
+  serviceAccountName: default
+  terminationGracePeriodSeconds: 30
+  tolerations:
+  - effect: NoExecute
+    key: node.kubernetes.io/not-ready
+    operator: Exists
+    tolerationSeconds: 300
+  - effect: NoExecute
+    key: node.kubernetes.io/unreachable
+    operator: Exists
+    tolerationSeconds: 300
+  volumes:
+  - name: kube-api-access-drshh
+    projected:
+      defaultMode: 420
+      sources:
+      - serviceAccountToken:
+          expirationSeconds: 3607
+          path: token
+      - configMap:
+          items:
+          - key: ca.crt
+            path: ca.crt
+          name: kube-root-ca.crt
+      - downwardAPI:
+          items:
+          - fieldRef:
+              apiVersion: v1
+              fieldPath: metadata.namespace
+            path: namespace
+status:
+  phase: Pending
+  qosClass: BestEffort
+controlplane $
+
+
+
+To delete a pod:
+
+controlplane $ kubectl delete pod simple-pod1  
+pod "simple-pod1" deleted
+controlplane $
+
+
+
+
+
+
+
+
+5.Replica Sets:
+===============
+
+To create deployment:
+
+controlplane $ kubectl create deployment rs-simple --image=nginx --replicas=3 --dry-run=client -o yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  creationTimestamp: null
+  labels:
+    app: rs-simple
+  name: rs-simple
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: rs-simple
+  strategy: {}
+  template:
+    metadata:
+      creationTimestamp: null
+      labels:
+        app: rs-simple
+    spec:
+      containers:
+      - image: nginx
+        name: nginx
+        resources: {}
+status: {}
+controlplane $
+
+
+Create the below file:
+controlplane $ cat rs.yaml
+apiVersion: apps/v1
+kind: ReplicaSet
+metadata:
+  labels:
+    app: rs-simple
+  name: rs-simple
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: rs-simple
+  template:
+    metadata:
+      labels:
+        app: rs-simple
+    spec:
+      containers:
+      - image: nginx
+        name: nginx
+controlplane $
+
+
+Create the replica set using the below command:
+
+controlplane $ kubectl apply -f rs.yaml 
+replicaset.apps/rs-simple created
+
+
+To find the details of the replica set and pods
+
+controlplane $ kubectl get rs
+NAME        DESIRED   CURRENT   READY   AGE
+rs-simple   3         3         2       14s
+controlplane $ 
+
+controlplane $ kubectl get pod
+NAME              READY   STATUS              RESTARTS   AGE
+rs-simple-dvv2l   0/1     ContainerCreating   0          111s
+rs-simple-lvx9j   1/1     Running             0          111s
+rs-simple-q4cnp   1/1     Running             0          111s
+controlplane $
+
+
+To delete a pod from replica set:
+controlplane $ kubectl delete pod rs-simple-q4cnp
+pod "rs-simple-q4cnp" deleted
+controlplane $
+
+for the deleetd pod, new pod gets created:
+
+controlplane $ kubectl get pod
+NAME              READY   STATUS              RESTARTS   AGE
+rs-simple-dvv2l   0/1     ContainerCreating   0          3m29s
+rs-simple-lvx9j   1/1     Running             0          3m29s
+rs-simple-qdflr   1/1     Running 
+
+
+To edit the version of rs :
+
+controlplane $ kubectl edit rs rs-simple 
+replicaset.apps/rs-simple edited
+controlplane $ 
+controlplane $ 
+controlplane $ kubectl describe rs rs-simple | grep -i Image
+    Image:        nginx:1.20.1
+controlplane $ 
+controlplane $ 
+controlplane $ kubectl get po   
+NAME              READY   STATUS              RESTARTS   AGE
+rs-simple-dvv2l   0/1     ContainerCreating   0          7m25s
+rs-simple-lvx9j   1/1     Running             0          7m25s
+rs-simple-qdflr   1/1     Running             0          4m36s
+controlplane $ 
+controlplane $ 
+controlplane $ kubectl describe pod rs-simple-qdflr | grep -i Image
+    Image:          nginx
+    Image ID:       docker.io/library/nginx@sha256:2ab30d6ac53580a6db8b657abf0f68d75360ff5cc1670a85acb5bd85ba1b19c0
+  Normal  Pulling    4m57s  kubelet            Pulling image "nginx"
+  Normal  Pulled     4m57s  kubelet            Successfully pulled image "nginx" in 508.558031ms (508.562293ms including waiting)
+controlplane $
+
+
+Note :It wont work so we have to create new replica set.
+
+To delete the replica set:
+controlplane $ kubectl delete rs rs-simple 
+replicaset.apps "rs-simple" deleted
+controlplane $ 
+controlplane $ 
+controlplane $ kubectl get rs
+No resources found in default namespace.
+controlplane $ 
+controlplane $ kubectl get pod
+NAME              READY   STATUS        RESTARTS   AGE
+rs-simple-dvv2l   0/1     Terminating   0          9m55s
+controlplane $
+
+Note : we cannot delete pods that belong to replica set. we have to delete the replica set to delete the pods.
+
+
+
+
+
+6. DEPLOYMENTS:
+===============
+
+To create a deployment :
+
+controlplane $ kubectl create deployment web --image=nginx:1.20.1
+deployment.apps/web created
+
+
+To get the deployment details:
+
+controlplane $ kubectl get deployment
+NAME   READY   UP-TO-DATE   AVAILABLE   AGE
+web    1/1     1            1           11s
+
+
+To get the replic set details:
+
+controlplane $ kubectl get rs        
+NAME             DESIRED   CURRENT   READY   AGE
+web-779f9cc4cc   1         1         1       80s
+
+
+To get the pod details: 
+controlplane $ kubectl get pod
+NAME                   READY   STATUS    RESTARTS   AGE
+web-779f9cc4cc-nd78m   1/1     Running   0          83s
+controlplane $
+
+To describe the deployment and to fetch the image:
+
+controlplane $ kubectl describe deployments.apps web | grep -i image 
+    Image:        nginx:1.20.1
+controlplane $
+
+
+To delete the pod and the new replacement is observed in the deployment:
+
+controlplane $ kubectl delete pod web-779f9cc4cc-nd78m
+pod "web-779f9cc4cc-nd78m" deleted
+controlplane $ 
+controlplane $ 
+controlplane $ kubectl get pod                        
+NAME                   READY   STATUS    RESTARTS   AGE
+web-779f9cc4cc-hhbjn   1/1     Running   0          7s
+controlplane $
+
+
+To scale the deployments from 1 replica to 4:
+
+controlplane $ kubectl scale deployment web --replicas=4
+deployment.apps/web scaled
+controlplane $
+
+After scaling:
+controlplane $ kubectl get pod
+NAME                   READY   STATUS    RESTARTS   AGE
+web-779f9cc4cc-5b2q2   1/1     Running   0          40s
+web-779f9cc4cc-9nffc   1/1     Running   0          40s
+web-779f9cc4cc-hhbjn   1/1     Running   0          107s
+web-779f9cc4cc-kstgn   1/1     Running   0          40s
+controlplane $
+
+
+controlplane $ kubectl get deployments.apps 
+NAME   READY   UP-TO-DATE   AVAILABLE   AGE
+web    4/4     4            4           6m34s
+controlplane $
+
+
+To describe the deployment:
+
+controlplane $ kubectl describe deployments.apps web
+Name:                   web
+Namespace:              default
+CreationTimestamp:      Sat, 08 Apr 2023 02:18:36 +0000
+Labels:                 app=web
+Annotations:            deployment.kubernetes.io/revision: 1
+Selector:               app=web
+Replicas:               4 desired | 4 updated | 4 total | 4 available | 0 unavailable
+StrategyType:           RollingUpdate
+MinReadySeconds:        0
+RollingUpdateStrategy:  25% max unavailable, 25% max surge
+Pod Template:
+  Labels:  app=web
+  Containers:
+   nginx:
+    Image:        nginx:1.20.1
+    Port:         <none>
+    Host Port:    <none>
+    Environment:  <none>
+    Mounts:       <none>
+  Volumes:        <none>
+Conditions:
+  Type           Status  Reason
+  ----           ------  ------
+  Progressing    True    NewReplicaSetAvailable
+  Available      True    MinimumReplicasAvailable
+OldReplicaSets:  <none>
+NewReplicaSet:   web-779f9cc4cc (4/4 replicas created)
+Events:
+  Type    Reason             Age    From                   Message
+  ----    ------             ----   ----                   -------
+  Normal  ScalingReplicaSet  7m12s  deployment-controller  Scaled up replica set web-779f9cc4cc to 1
+  Normal  ScalingReplicaSet  116s   deployment-controller  Scaled up replica set web-779f9cc4cc to 4 from 1
+controlplane $
+
+
+
+To change the image of the pods in the deployment:
+
+controlplane $ kubectl set image deployment web nginx=nginx:1.21.1 --record
+Flag --record has been deprecated, --record will be removed in the future
+deployment.apps/web image updated
+controlplane $
+
+controlplane $ kubectl get rs         
+NAME             DESIRED   CURRENT   READY   AGE
+web-779f9cc4cc   0         0         0       10m
+web-77b7dc689d   4         4         4       26s
+controlplane $
+
+To verify the changed image:
+
+controlplane $ kubectl describe deployments.apps web | grep -i image
+                        kubernetes.io/change-cause: kubectl set image deployment web nginx=nginx:1.21.1 --record=true
+    Image:        nginx:1.21.1
+controlplane $
+
+
+To check the history of the deployments:
+
+controlplane $ kubectl describe deployments.apps web | grep -i image
+                        kubernetes.io/change-cause: kubectl set image deployment web nginx=nginx:1.21.1 --record=true
+    Image:        nginx:1.21.1
+controlplane $ 
+controlplane $ 
+controlplane $ 
+controlplane $ 
+controlplane $ kubectl describe deployments.apps web
+Name:                   web
+Namespace:              default
+CreationTimestamp:      Sat, 08 Apr 2023 02:18:36 +0000
+Labels:                 app=web
+Annotations:            deployment.kubernetes.io/revision: 2
+                        kubernetes.io/change-cause: kubectl set image deployment web nginx=nginx:1.21.1 --record=true
+Selector:               app=web
+Replicas:               4 desired | 4 updated | 4 total | 4 available | 0 unavailable
+StrategyType:           RollingUpdate
+MinReadySeconds:        0
+RollingUpdateStrategy:  25% max unavailable, 25% max surge
+Pod Template:
+  Labels:  app=web
+  Containers:
+   nginx:
+    Image:        nginx:1.21.1
+    Port:         <none>
+    Host Port:    <none>
+    Environment:  <none>
+    Mounts:       <none>
+  Volumes:        <none>
+Conditions:
+  Type           Status  Reason
+  ----           ------  ------
+  Available      True    MinimumReplicasAvailable
+  Progressing    True    NewReplicaSetAvailable
+OldReplicaSets:  <none>
+NewReplicaSet:   web-77b7dc689d (4/4 replicas created)
+Events:
+  Type    Reason             Age    From                   Message
+  ----    ------             ----   ----                   -------
+  Normal  ScalingReplicaSet  12m    deployment-controller  Scaled up replica set web-779f9cc4cc to 1
+  Normal  ScalingReplicaSet  6m55s  deployment-controller  Scaled up replica set web-779f9cc4cc to 4 from 1
+  Normal  ScalingReplicaSet  2m31s  deployment-controller  Scaled up replica set web-77b7dc689d to 1
+  Normal  ScalingReplicaSet  2m31s  deployment-controller  Scaled down replica set web-779f9cc4cc to 3 from 4
+  Normal  ScalingReplicaSet  2m31s  deployment-controller  Scaled up replica set web-77b7dc689d to 2 from 1
+  Normal  ScalingReplicaSet  2m23s  deployment-controller  Scaled down replica set web-779f9cc4cc to 2 from 3
+  Normal  ScalingReplicaSet  2m23s  deployment-controller  Scaled up replica set web-77b7dc689d to 3 from 2
+  Normal  ScalingReplicaSet  2m22s  deployment-controller  Scaled down replica set web-779f9cc4cc to 1 from 2
+  Normal  ScalingReplicaSet  2m22s  deployment-controller  Scaled up replica set web-77b7dc689d to 4 from 3
+  Normal  ScalingReplicaSet  2m21s  deployment-controller  (combined from similar events): Scaled down replica set web-779f9cc4cc to 0 from 1
+  
+  
+To check the rollback history:
+
+controlplane $ kubectl rollout history deployment web
+deployment.apps/web 
+REVISION  CHANGE-CAUSE
+1         <none>
+2         kubectl set image deployment web nginx=nginx:1.21.1 --record=true
+
+controlplane $
+
+
+
+To go back to previous revision :
+
+controlplane $ kubectl rollout undo deployment web
+deployment.apps/web rolled back
+controlplane $ 
+controlplane $ 
+controlplane $ kubectl get rs
+NAME             DESIRED   CURRENT   READY   AGE
+web-779f9cc4cc   4         4         4       17m
+web-77b7dc689d   0         0         0       7m59s
+controlplane $ 
+controlplane $ 
+controlplane $ kubectl get deployments.apps 
+NAME   READY   UP-TO-DATE   AVAILABLE   AGE
+web    4/4     4            4           17m
+controlplane $ 
+controlplane $ 
+controlplane $ kubectl describe deployments.apps web | grep -i image
+    Image:        nginx:1.20.1
+controlplane $
+
+
+Note: the image is reverted back to old one and the old replica set is having all the pods
+
+
+
+
+7. KUBERNETES LABEL AND SELECTOR:
+=================================
+
+* Label is a key value pair thats attached to an object like pod/deployment/replica set
+* It is used to identify the objects with respect to any project or codeline.
+* It can be added at anytime i.e.; during creation or later
+
+
+Create 2 pods:
+
+controlplane $ kubectl run web-dev image --image=nginx
+pod/web-dev created
+controlplane $ kubectl run db-dev image --image=nginx
+pod/db-dev created
+controlplane $
+
+To get all the pods with their labels:
+
+controlplane $ kubectl get pod --show-labels
+NAME      READY   STATUS             RESTARTS      AGE   LABELS
+db-dev    0/1     CrashLoopBackOff   1 (8s ago)    10s   run=db-dev
+web-dev   0/1     CrashLoopBackOff   1 (11s ago)   17s   run=web-dev
+controlplane $
+
+
+To lable the pods:
+
+controlplane $ kubectl label pod db-dev env=dev name=db
+pod/db-dev labeled
+controlplane $ 
+controlplane $ 
+controlplane $ kubectl label pod web-dev env=dev name=web
+pod/web-dev labeled
+controlplane $
+
+controlplane $ kubectl get pod --show-labels
+NAME      READY   STATUS             RESTARTS      AGE     LABELS
+db-dev    0/1     CrashLoopBackOff   4 (44s ago)   2m9s    env=dev,name=db,run=db-dev
+web-dev   0/1     CrashLoopBackOff   4 (36s ago)   2m16s   env=dev,name=web,run=web-dev
+controlplane $
+
+
+
+Create new pods:
+controlplane $ kubectl run web-prod --image=nginx
+pod/web-prod created
+controlplane $
+
+
+controlplane $ kubectl run db-prod --image=nginx --dry-run=client -o yaml
+apiVersion: v1
+kind: Pod
+metadata:
+  creationTimestamp: null
+  labels:
+    run: db-prod
+  name: db-prod
+spec:
+  containers:
+  - image: nginx
+    name: db-prod
+    resources: {}
+  dnsPolicy: ClusterFirst
+  restartPolicy: Always
+status: {}
+controlplane $
+
+controlplane $ cat db-prod.yaml
+apiVersion: v1
+kind: Pod
+metadata:
+  labels:
+    env: prod
+    name: db
+  name: db-prod
+spec:
+  containers:
+  - image: nginx
+    name: db-prod
+    resources: {}
+  dnsPolicy: ClusterFirst
+  restartPolicy: Always
+status: {}
+controlplane $
+
+controlplane $ kubectl apply -f db-prod.yaml 
+pod/db-prod created
+
+controlplane $ kubectl get pod --show-labels
+NAME       READY   STATUS             RESTARTS        AGE     LABELS
+db-dev     0/1     CrashLoopBackOff   7 (2m51s ago)   13m     env=dev,name=db,run=db-dev
+db-prod    1/1     Running            0               66s     env=prod,name=db
+web-dev    0/1     CrashLoopBackOff   7 (2m48s ago)   13m     env=dev,name=web,run=web-dev
+web-prod   1/1     Running            0               9m11s   run=web-prod
+controlplane $ 
+controlplane $ 
+controlplane $ kubectl label pod web-prod env=prod name=web
+pod/web-prod labeled
+controlplane $ 
+controlplane $ kubectl get pod --show-labels
+NAME       READY   STATUS             RESTARTS        AGE     LABELS
+db-dev     0/1     CrashLoopBackOff   7 (3m29s ago)   14m     env=dev,name=db,run=db-dev
+db-prod    1/1     Running            0               104s    env=prod,name=db
+web-dev    0/1     CrashLoopBackOff   7 (3m26s ago)   14m     env=dev,name=web,run=web-dev
+web-prod   1/1     Running            0               9m49s   env=prod,name=web,run=web-prod
+controlplane $ 
+
+
+
+controlplane $ kubectl get pod -l env=prod  
+NAME       READY   STATUS    RESTARTS   AGE
+db-prod    1/1     Running   0          2m22s
+web-prod   1/1     Running   0          10m
+controlplane $
+
+
+controlplane $ kubectl get pod -l env=prod,name=web
+NAME       READY   STATUS    RESTARTS   AGE
+web-prod   1/1     Running   0          10m
+controlplane $ 
+
+
+To remove env lable from web-prod pod:
+
+controlplane $ kubectl label pod web-prod env-
+pod/web-prod unlabeled
+
+
+controlplane $ kubectl get pod --show-labels
+NAME       READY   STATUS             RESTARTS      AGE     LABELS
+db-dev     0/1     CrashLoopBackOff   8 (80s ago)   17m     env=dev,name=db,run=db-dev
+db-prod    1/1     Running            0             4m42s   env=prod,name=db
+web-dev    0/1     CrashLoopBackOff   8 (72s ago)   17m     env=dev,name=web,run=web-dev
+web-prod   1/1     Running            0             12m     name=web,run=web-prod
+controlplane $
+
+
+
+8. Taint and Tolerations
+=========================
+
+Taint : to restrict the pod on which node it has to run
+Toleration is available in the description file
+Taint at node
+Toleration is at pod
+
+
+To list the nodes:
+controlplane $ kubectl get node
+NAME           STATUS   ROLES           AGE   VERSION
+controlplane   Ready    control-plane   43d   v1.26.1
+node01         Ready    <none>          43d   v1.26.1
+controlplane $
+
+To get the taint on the nodes:
+controlplane $ kubectl describe node controlplane | grep -i taint
+Taints:             <none>
+controlplane $
+
+controlplane $ kubectl describe node node01 | grep -i taint
+Taints:             <none>
+controlplane 
+
+
+Create a pod and check on which node:
+
+controlplane $ kubectl run test-pod --image=nginx
+pod/test-pod created
+controlplane $ 
+controlplane $ 
+
+
+controlplane $ 
+controlplane $ kubectl get pod -o wide
+NAME       READY   STATUS    RESTARTS   AGE   IP            NODE     NOMINATED NODE   READINESS GATES
+test-pod   1/1     Running   0          12s   192.168.1.3   node01   <none>           <none>
+controlplane $ 
+
+
+To taint a node:
+controlplane $ kubectl taint node node01 key1=value1:NoSchedule
+node/node01 tainted
+controlplane $
+
+controlplane $ kubectl describe nodes node01 | grep -i Taints
+Taints:             key1=value1:NoSchedule
+controlplane $
+
+Note: When taint is applied on all the nodes as noSchedule and a pod is created then the pod state will be as Pending. And no toleration is applied on the pod.
+
+As taint is applied to node01 the pod2 is running on controlplane :
+
+controlplane $ kubectl run test-pod2 --image=nginx
+pod/test-pod2 created
+controlplane $ 
+controlplane $ 
+controlplane $ kubectl get pod -o wide
+NAME        READY   STATUS    RESTARTS   AGE     IP            NODE           NOMINATED NODE   READINESS GATES
+test-pod    1/1     Running   0          28m     192.168.1.3   node01         <none>           <none>
+test-pod2   1/1     Running   0          10s     192.168.0.8   controlplane   <none>           <none>
+
+To add toleration to the pod:
+
+controlplane $ kubectl run test-pod3 --image=nginx --dry-run=client -o yaml
+apiVersion: v1
+kind: Pod
+metadata:
+  creationTimestamp: null
+  labels:
+    run: test-pod3
+  name: test-pod3
+spec:
+  containers:
+  - image: nginx
+    name: test-pod3
+    resources: {}
+  dnsPolicy: ClusterFirst
+  restartPolicy: Always
+status: {}
+controlplane $
+
+
+create a file pod.yaml and add the below content:
+controlplane $ cat pod.yaml 
+apiVersion: v1
+kind: Pod
+metadata:
+  labels:
+    run: test-pod3
+  name: test-pod3
+spec:
+  containers:
+  - image: nginx
+    name: test-pod3
+  tolerations:
+  - key: "key1"
+    operator: "Equal"
+    value: "value1"
+    effect: "NoSchedule"
+	
+Create the pod:
+controlplane $ kubectl apply -f pod.yaml 
+pod/test-pod3 created
+ as we tainted 
+controlplane $ kubectl get pod -o wide
+NAME        READY   STATUS    RESTARTS   AGE    IP            NODE     NOMINATED NODE   READINESS GATES
+test-pod    1/1     Running   0          27m    192.168.1.3   node01   <none>           <none>
+test-pod3   1/1     Running   0          103s   192.168.1.4   node01   <none>           <none>
+controlplane $
+
+
+To remove taint:
+
+controlplane $ kubectl taint node node01 key1=value1:NoSchedule-
+node/node01 untainted
+controlplane 
+
+controlplane $ 
+controlplane $ kubectl describe nodes node01 | grep -i taint
+Taints:             <none>
+controlplane $ 
+
+Note:
+Once the taint is removed, the pod that was in pending state with toleration to a node then that pod status changes to Running.
