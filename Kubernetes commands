@@ -2329,6 +2329,330 @@ controlplane $
 
 
 
+PERSISTENT VOLUME:
+
+82. Create a Job with an image node which prints node version and also verifies there is a pod created for this job
+
+controlplane $ kubectl create job nodeversion --image=node -- node -v
+job.batch/nodeversion created
+
+
+controlplane $ kubectl get job -w
+NAME          COMPLETIONS   DURATION   AGE
+nodeversion   1/1           4s         7s
+^Ccontrolplane $ 
+
+
+
+controlplane $ kubectl get pod   
+NAME                READY   STATUS      RESTARTS   AGE
+nodeversion-mmqd9   0/1     Completed   0          44s
+controlplane $
+
+
+
+83. Get the logs of the job just created
+
+controlplane $ kubectl logs  nodeversion-mmqd9 
+v20.0.0
+controlplane $
+
+
+84.Output the yaml file for the Job with the image busybox which echos “Hello I am from job”
+
+controlplane $ kubectl create job hello-job --image=busybox --dry-run -o yaml -- echo "Hello I am from job"
+W0429 05:16:41.947044   44526 helpers.go:663] --dry-run is deprecated and can be replaced with --dry-run=client.
+apiVersion: batch/v1
+kind: Job
+metadata:
+  creationTimestamp: null
+  name: hello-job
+spec:
+  template:
+    metadata:
+      creationTimestamp: null
+    spec:
+      containers:
+      - command:
+        - echo
+        - Hello I am from job
+        image: busybox
+        name: hello-job
+        resources: {}
+      restartPolicy: Never
+status: {}
+controlplane $
+
+
+
+85. Copy the above YAML file to hello-job.yaml file and create the job
+
+controlplane $ kubectl create job hello-job --image=busybox --dry-run=client -o yaml -- echo "Hello I am from job" > hello-job.yaml
+controlplane $ 
+
+
+controlplane $ kubectl create -f hello-job.yaml
+job.batch/hello-job created
+controlplane $ 
+
+
+86. Verify the job and the associated pod is created and check the logs as well
+
+controlplane $ kubectl get job
+NAME          COMPLETIONS   DURATION   AGE
+hello-job     1/1           5s         37s
+nodeversion   1/1           4s         12m
+
+
+controlplane $ kubectl get pod
+NAME                READY   STATUS      RESTARTS   AGE
+hello-job-2p6j2     0/1     Completed   0          30s
+nodeversion-mmqd9   0/1     Completed   0          12m
+
+
+controlplane $ kubectl logs hello-job-2p6j2
+Hello I am from job
+
+
+
+87. Delete the job we just created
+
+controlplane $ kubectl delete jobs.batch hello-job
+job.batch "hello-job" deleted
+
+
+
+88. Create the same job and make it run 10 times one after one
+
+controlplane $ kubectl create job hello-job --image=busybox --dry-run=client -o yaml -- echo "Hello I am from job" > hello-job.yaml
+
+
+
+
+// edit the yaml file to add completions: 10
+controlplane $ cat hello-job.yaml 
+apiVersion: batch/v1
+kind: Job
+metadata:
+  creationTimestamp: null
+  name: hello-job
+spec:
+  completions: 10
+  template:
+    metadata:
+      creationTimestamp: null
+    spec:
+      containers:
+      - command:
+        - echo
+        - Hello I am from job
+        image: busybox
+        name: hello-job
+        resources: {}
+      restartPolicy: Never
+status: {}
+controlplane $
+
+
+
+controlplane $ kubectl create -f hello-job.yaml
+job.batch/hello-job created
+controlplane $ 
+
+
+
+89. Watch the job that runs 10 times one by one and verify 10 pods are created and delete those after it’s completed
+
+controlplane $ kubectl get job -w
+NAME          COMPLETIONS   DURATION   AGE
+hello-job     9/10          36s        36s
+nodeversion   1/1           4s         18m
+
+hello-job     9/10          40s        40s
+hello-job     10/10         40s        40s
+
+
+
+
+controlplane $ kubectl get po
+NAME                READY   STATUS      RESTARTS   AGE
+hello-job-27xld     0/1     Completed   0          64s
+hello-job-2glsm     0/1     Completed   0          36s
+hello-job-7bm4t     0/1     Completed   0          68s
+hello-job-925c4     0/1     Completed   0          60s
+hello-job-d2jsf     0/1     Completed   0          32s
+hello-job-fzhl7     0/1     Completed   0          56s
+hello-job-rcwtv     0/1     Completed   0          52s
+hello-job-ttf5w     0/1     Completed   0          40s
+hello-job-w9khv     0/1     Completed   0          48s
+hello-job-wcw79     0/1     Completed   0          44s
+nodeversion-mmqd9   0/1     Completed   0          19m
+
+
+
+
+controlplane $ kubectl delete job hello-job
+job.batch "hello-job" deleted
+
+
+
+
+90. Create the same job and make it run 10 times parallel
+
+controlplane $ kubectl create job hello-job --image=busybox --dry-run=client -o yaml -- echo "Hello I am from job" > hello-job.yaml
+controlplane $
+
+
+// edit the yaml file to add parallelism: 10
+controlplane $ cat hello-job.yaml 
+apiVersion: batch/v1
+kind: Job
+metadata:
+  creationTimestamp: null
+  name: hello-job
+spec:
+  parallelism: 10
+  template:
+    metadata:
+      creationTimestamp: null
+    spec:
+      containers:
+      - command:
+        - echo
+        - Hello I am from job
+        image: busybox
+        name: hello-job
+        resources: {}
+      restartPolicy: Never
+status: {}
+
+
+controlplane $ kubectl create -f hello-job.yaml
+job.batch/hello-job created
+
+
+
+
+controlplane $ kubectl get pod
+NAME                READY   STATUS      RESTARTS   AGE
+hello-job-dhkqz     0/1     Completed   0          57s
+hello-job-dnh7s     0/1     Completed   0          57s
+hello-job-dnqvc     0/1     Completed   0          57s
+hello-job-mm8rw     0/1     Completed   0          57s
+hello-job-nfmxv     0/1     Completed   0          57s
+hello-job-nh4sd     0/1     Completed   0          57s
+hello-job-qbmv5     0/1     Completed   0          57s
+hello-job-v2wcd     0/1     Completed   0          57s
+hello-job-z4zfq     0/1     Completed   0          57s
+hello-job-zsppx     0/1     Completed   0          57s
+nodeversion-mmqd9   0/1     Completed   0          23m
+controlplane $ 
+
+
+
+controlplane $ kubectl delete job hello-job
+job.batch "hello-job" deleted
+
+
+92. Create a Cronjob with busybox image that prints date and hello from kubernetes cluster message for every minute
+
+controlplane $ kubectl create cronjob date-job --image=busybox --schedule="*/1 * * * *" -- bin/sh -c "date; echo Hello from kubernetes cluster"
+cronjob.batch/date-job created
+controlplane $ 
+
+
+
+
+93. Output the YAML file of the above cronjob
+
+controlplane $ kubectl get cj date-job -o yaml
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  creationTimestamp: "2023-04-29T05:37:40Z"
+  generation: 1
+  name: date-job
+  namespace: default
+  resourceVersion: "5063"
+  uid: 60f8d9b1-28d7-4700-a3c9-d30df9e8791e
+spec:
+  concurrencyPolicy: Allow
+  failedJobsHistoryLimit: 1
+  jobTemplate:
+    metadata:
+      creationTimestamp: null
+      name: date-job
+    spec:
+      template:
+        metadata:
+          creationTimestamp: null
+        spec:
+          containers:
+          - command:
+            - bin/sh
+            - -c
+            - date; echo Hello from kubernetes cluster
+            image: busybox
+            imagePullPolicy: Always
+            name: date-job
+            resources: {}
+            terminationMessagePath: /dev/termination-log
+            terminationMessagePolicy: File
+          dnsPolicy: ClusterFirst
+          restartPolicy: OnFailure
+          schedulerName: default-scheduler
+          securityContext: {}
+          terminationGracePeriodSeconds: 30
+  schedule: '*/1 * * * *'
+  successfulJobsHistoryLimit: 3
+  suspend: false
+status: {}
+
+
+
+
+
+94. Verify that CronJob creating a separate job and pods for every minute to run and verify the logs of the pod
+
+
+
+controlplane $ kubectl get job                
+NAME                COMPLETIONS   DURATION   AGE
+date-job-28045778   1/1           3s         92s
+date-job-28045779   1/1           3s         32s
+nodeversion         1/1           4s         28m
+
+
+
+controlplane $ kubectl get pod                
+NAME                      READY   STATUS      RESTARTS   AGE
+date-job-28045778-wb8sh   0/1     Completed   0          104s
+date-job-28045779-h8nj5   0/1     Completed   0          44s
+nodeversion-mmqd9         0/1     Completed   0          28m
+
+
+
+controlplane $ kubectl logs date-job-28045779-h8nj5 
+Sat Apr 29 05:39:01 UTC 2023
+Hello from kubernetes cluster
+
+
+95. Delete the CronJob and verify all the associated jobs and pods are also deleted.
+
+controlplane $ kubectl delete cj date-job
+cronjob.batch "date-job" deleted
+
+
+controlplane $ kubectl get po
+NAME                READY   STATUS      RESTARTS   AGE
+nodeversion-mmqd9   0/1     Completed   0          30m
+
+
+ 
+controlplane $ kubectl get job
+NAME          COMPLETIONS   DURATION   AGE
+nodeversion   1/1           4s         31m
+controlplane $ 
 
 
 
