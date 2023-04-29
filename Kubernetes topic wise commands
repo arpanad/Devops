@@ -840,3 +840,445 @@ controlplane $
 
 Note:
 Once the taint is removed, the pod that was in pending state with toleration to a node then that pod status changes to Running.
+
+
+
+9.NAMESAPACES:
+==============
+
+controlplane $ kubectl get pod
+No resources found in default namespace.
+
+ 
+controlplane $ kubectl get deployments
+No resources found in default namespace.
+
+
+controlplane $ kubectl get node
+NAME           STATUS   ROLES           AGE   VERSION
+controlplane   Ready    control-plane   17d   v1.26.1
+node01         Ready    <none>          17d   v1.26.1
+
+
+controlplane $ kubectl get namespaces 
+NAME                 STATUS   AGE
+default              Active   17d
+kube-node-lease      Active   17d
+kube-public          Active   17d
+kube-system          Active   17d
+local-path-storage   Active   17d
+
+
+Create a pod and get the pods in default namespace:
+
+controlplane $ kubectl run test --image=nginx 
+pod/test created
+controlplane $ 
+controlplane $ 
+controlplane $ kubectl get pod 
+NAME   READY   STATUS    RESTARTS   AGE
+test   1/1     Running   0          7s
+controlplane $ 
+controlplane $ 
+controlplane $ kubectl get pod -n default
+NAME   READY   STATUS    RESTARTS   AGE
+test   1/1     Running   0          25s
+controlplane $ 
+
+
+To create a new namespace and list it:
+controlplane $ kubectl create ns pod-ns
+namespace/pod-ns created
+controlplane $ 
+controlplane $ 
+controlplane $ 
+controlplane $ kubectl get ns
+NAME                 STATUS   AGE
+default              Active   17d
+kube-node-lease      Active   17d
+kube-public          Active   17d
+kube-system          Active   17d
+local-path-storage   Active   17d
+pod-ns               Active   31s
+controlplane 
+
+
+
+
+To create pod in the namespace thats created and to list the pod in that namespace:
+controlplane $ kubectl run test-pod --image=nginx -n pod-ns
+pod/test-pod created
+
+
+controlplane $ kubectl get pod  
+NAME   READY   STATUS    RESTARTS   AGE
+test   1/1     Running   0          4m43s
+
+
+controlplane $ kubectl get pod -n pod-ns
+NAME       READY   STATUS    RESTARTS   AGE
+test-pod   1/1     Running   0          22s
+controlplane $
+
+
+To list all the objects in the default and created namespace:
+
+controlplane $ kubectl get all
+NAME       READY   STATUS    RESTARTS   AGE
+pod/test   1/1     Running   0          6m24s
+
+NAME                 TYPE        CLUSTER-IP   EXTERNAL-IP   PORT(S)   AGE
+service/kubernetes   ClusterIP   10.96.0.1    <none>        443/TCP   17d
+controlplane $ 
+controlplane $ 
+controlplane $ 
+controlplane $ 
+controlplane $ 
+controlplane $ kubectl get all -n pod-ns
+NAME           READY   STATUS    RESTARTS   AGE
+pod/test-pod   1/1     Running   0          2m13s
+controlplane $
+
+
+
+
+
+To list all the resources that are dependant on namespace:
+
+controlplane $ kubectl api-resources --namespaced=true 
+NAME                        SHORTNAMES   APIVERSION                     NAMESPACED   KIND
+bindings                                 v1                             true         Binding
+configmaps                  cm           v1                             true         ConfigMap
+endpoints                   ep           v1                             true         Endpoints
+events                      ev           v1                             true         Event
+limitranges                 limits       v1                             true         LimitRange
+persistentvolumeclaims      pvc          v1                             true         PersistentVolumeClaim
+pods                        po           v1                             true         Pod
+podtemplates                             v1                             true         PodTemplate
+replicationcontrollers      rc           v1                             true         ReplicationController
+resourcequotas              quota        v1                             true         ResourceQuota
+secrets                                  v1                             true         Secret
+serviceaccounts             sa           v1                             true         ServiceAccount
+services                    svc          v1                             true         Service
+controllerrevisions                      apps/v1                        true         ControllerRevision
+daemonsets                  ds           apps/v1                        true         DaemonSet
+deployments                 deploy       apps/v1                        true         Deployment
+replicasets                 rs           apps/v1                        true         ReplicaSet
+statefulsets                sts          apps/v1                        true         StatefulSet
+localsubjectaccessreviews                authorization.k8s.io/v1        true         LocalSubjectAccessReview
+horizontalpodautoscalers    hpa          autoscaling/v2                 true         HorizontalPodAutoscaler
+cronjobs                    cj           batch/v1                       true         CronJob
+jobs                                     batch/v1                       true         Job
+leases                                   coordination.k8s.io/v1         true         Lease
+networkpolicies                          crd.projectcalico.org/v1       true         NetworkPolicy
+networksets                              crd.projectcalico.org/v1       true         NetworkSet
+endpointslices                           discovery.k8s.io/v1            true         EndpointSlice
+events                      ev           events.k8s.io/v1               true         Event
+ingresses                   ing          networking.k8s.io/v1           true         Ingress
+networkpolicies             netpol       networking.k8s.io/v1           true         NetworkPolicy
+poddisruptionbudgets        pdb          policy/v1                      true         PodDisruptionBudget
+rolebindings                             rbac.authorization.k8s.io/v1   true         RoleBinding
+roles                                    rbac.authorization.k8s.io/v1   true         Role
+csistoragecapacities                     storage.k8s.io/v1              true         CSIStorageCapacity
+controlplane $
+
+
+To list all the resources that are not dependant on namespace:
+
+controlplane $ kubectl api-resources --namespaced=false
+NAME                              SHORTNAMES   APIVERSION                             NAMESPACED   KIND
+componentstatuses                 cs           v1                                     false        ComponentStatus
+namespaces                        ns           v1                                     false        Namespace
+nodes                             no           v1                                     false        Node
+persistentvolumes                 pv           v1                                     false        PersistentVolume
+mutatingwebhookconfigurations                  admissionregistration.k8s.io/v1        false        MutatingWebhookConfiguration
+validatingwebhookconfigurations                admissionregistration.k8s.io/v1        false        ValidatingWebhookConfiguration
+customresourcedefinitions         crd,crds     apiextensions.k8s.io/v1                false        CustomResourceDefinition
+apiservices                                    apiregistration.k8s.io/v1              false        APIService
+tokenreviews                                   authentication.k8s.io/v1               false        TokenReview
+selfsubjectaccessreviews                       authorization.k8s.io/v1                false        SelfSubjectAccessReview
+selfsubjectrulesreviews                        authorization.k8s.io/v1                false        SelfSubjectRulesReview
+subjectaccessreviews                           authorization.k8s.io/v1                false        SubjectAccessReview
+certificatesigningrequests        csr          certificates.k8s.io/v1                 false        CertificateSigningRequest
+bgpconfigurations                              crd.projectcalico.org/v1               false        BGPConfiguration
+bgppeers                                       crd.projectcalico.org/v1               false        BGPPeer
+blockaffinities                                crd.projectcalico.org/v1               false        BlockAffinity
+caliconodestatuses                             crd.projectcalico.org/v1               false        CalicoNodeStatus
+clusterinformations                            crd.projectcalico.org/v1               false        ClusterInformation
+felixconfigurations                            crd.projectcalico.org/v1               false        FelixConfiguration
+globalnetworkpolicies                          crd.projectcalico.org/v1               false        GlobalNetworkPolicy
+globalnetworksets                              crd.projectcalico.org/v1               false        GlobalNetworkSet
+hostendpoints                                  crd.projectcalico.org/v1               false        HostEndpoint
+ipamblocks                                     crd.projectcalico.org/v1               false        IPAMBlock
+ipamconfigs                                    crd.projectcalico.org/v1               false        IPAMConfig
+ipamhandles                                    crd.projectcalico.org/v1               false        IPAMHandle
+ippools                                        crd.projectcalico.org/v1               false        IPPool
+ipreservations                                 crd.projectcalico.org/v1               false        IPReservation
+kubecontrollersconfigurations                  crd.projectcalico.org/v1               false        KubeControllersConfiguration
+flowschemas                                    flowcontrol.apiserver.k8s.io/v1beta3   false        FlowSchema
+prioritylevelconfigurations                    flowcontrol.apiserver.k8s.io/v1beta3   false        PriorityLevelConfiguration
+ingressclasses                                 networking.k8s.io/v1                   false        IngressClass
+runtimeclasses                                 node.k8s.io/v1                         false        RuntimeClass
+clusterrolebindings                            rbac.authorization.k8s.io/v1           false        ClusterRoleBinding
+clusterroles                                   rbac.authorization.k8s.io/v1           false        ClusterRole
+priorityclasses                   pc           scheduling.k8s.io/v1                   false        PriorityClass
+csidrivers                                     storage.k8s.io/v1                      false        CSIDriver
+csinodes                                       storage.k8s.io/v1                      false        CSINode
+storageclasses                    sc           storage.k8s.io/v1                      false        StorageClass
+volumeattachments                              storage.k8s.io/v1                      false        VolumeAttachment
+controlplane $
+
+
+
+
+To switch to a namespace:
+
+controlplane $ kubectl config set-context --current --namespace=pod-ns
+Context "kubernetes-admin@kubernetes" modified.
+
+
+
+controlplane $ kubectl get pod
+NAME       READY   STATUS    RESTARTS   AGE
+test-pod   1/1     Running   0          9m25s
+controlplane $
+
+
+(now in pod-ns namespace)
+controlplane $ kubectl get pod -n default
+NAME   READY   STATUS    RESTARTS   AGE
+test   1/1     Running   0          14m
+controlplane $ 
+
+
+
+11. CONFIG MAPS:
+================
+
+To create config map:
+controlplane $ kubectl create cm myconfigmap --from-literal=app.memory=1000
+configmap/myconfigmap created
+controlplane $
+
+
+To get the config maps:
+
+controlplane $ kubectl get configmaps 
+NAME               DATA   AGE
+kube-root-ca.crt   1      17d
+myconfigmap        1      21s
+controlplane $
+
+
+To get a single config map in yaml format:
+
+controlplane $ kubectl get configmaps myconfigmap -o yaml
+apiVersion: v1
+data:
+  app.memory: "1000"
+kind: ConfigMap
+metadata:
+  creationTimestamp: "2023-04-29T00:26:15Z"
+  name: myconfigmap
+  namespace: default
+  resourceVersion: "2694"
+  uid: a4afdc66-020a-4a3d-b7f3-d8becbffacb6
+controlplane $ 
+
+
+
+Create a pod using the below yaml file:
+
+controlplane $ cat pod.yaml 
+apiVersion: v1
+kind: Pod
+metadata:
+  name: mypod-cm
+spec:
+  containers:
+  - name: mypod
+    image: nginx
+    volumeMounts:
+    - name: mycm-volume
+      mountPath: "/etc/myvolume"
+      readOnly: true
+  volumes:
+  - name: mycm-volume
+    configMap:
+      name: myconfigmap
+controlplane $ 
+
+controlplane $ kubectl apply -f pod.yaml
+pod/mypod-cm created
+controlplane $
+
+
+controlplane $ kubectl get pod
+NAME       READY   STATUS    RESTARTS   AGE
+mypod-cm   1/1     Running   0          92s
+controlplane $
+
+
+
+controlplane $ kubectl get pod
+NAME       READY   STATUS    RESTARTS   AGE
+mypod-cm   1/1     Running   0          92s
+controlplane $ 
+controlplane $ 
+controlplane $ 
+controlplane $ 
+controlplane $ kubectl describe pod mypod-cm 
+Name:             mypod-cm
+Namespace:        default
+Priority:         0
+Service Account:  default
+Node:             node01/172.30.2.2
+Start Time:       Sat, 29 Apr 2023 00:40:48 +0000
+Labels:           <none>
+Annotations:      cni.projectcalico.org/containerID: 19a4c58fa2ae295e7bccae888790d4dc2fbb4fa22762b5e290717704c3acc181
+                  cni.projectcalico.org/podIP: 192.168.1.3/32
+                  cni.projectcalico.org/podIPs: 192.168.1.3/32
+Status:           Running
+IP:               192.168.1.3
+IPs:
+  IP:  192.168.1.3
+Containers:
+  mypod:
+    Container ID:   containerd://886f1bccf44e193b515f225e95c6ba21ad48f70247a462407e506ef76689b708
+    Image:          nginx
+    Image ID:       docker.io/library/nginx@sha256:63b44e8ddb83d5dd8020327c1f40436e37a6fffd3ef2498a6204df23be6e7e94
+    Port:           <none>
+    Host Port:      <none>
+    State:          Running
+      Started:      Sat, 29 Apr 2023 00:40:54 +0000
+    Ready:          True
+    Restart Count:  0
+    Environment:    <none>
+    Mounts:
+      /etc/myvolume from mycm-volume (ro)
+      /var/run/secrets/kubernetes.io/serviceaccount from kube-api-access-kkdzq (ro)
+Conditions:
+  Type              Status
+  Initialized       True 
+  Ready             True 
+  ContainersReady   True 
+  PodScheduled      True 
+Volumes:
+  mycm-volume:
+    Type:      ConfigMap (a volume populated by a ConfigMap)
+    Name:      myconfigmap
+    Optional:  false
+  kube-api-access-kkdzq:
+    Type:                    Projected (a volume that contains injected data from multiple sources)
+    TokenExpirationSeconds:  3607
+    ConfigMapName:           kube-root-ca.crt
+    ConfigMapOptional:       <nil>
+    DownwardAPI:             true
+QoS Class:                   BestEffort
+Node-Selectors:              <none>
+Tolerations:                 node.kubernetes.io/not-ready:NoExecute op=Exists for 300s
+                             node.kubernetes.io/unreachable:NoExecute op=Exists for 300s
+Events:
+  Type    Reason     Age    From               Message
+  ----    ------     ----   ----               -------
+  Normal  Scheduled  2m14s  default-scheduler  Successfully assigned default/mypod-cm to node01
+  Normal  Pulling    2m13s  kubelet            Pulling image "nginx"
+  Normal  Pulled     2m8s   kubelet            Successfully pulled image "nginx" in 4.841774961s (4.8417793s including waiting)
+  Normal  Created    2m8s   kubelet            Created container mypod
+  Normal  Started    2m8s   kubelet            Started container mypod
+  
+  
+  
+To login to the pod and check the volumeMount:
+controlplane $ kubectl exec -it mypod-cm bash
+kubectl exec [POD] [COMMAND] is DEPRECATED and will be removed in a future version. Use kubectl exec [POD] -- [COMMAND] instead.
+root@mypod-cm:/# 
+root@mypod-cm:/# 
+root@mypod-cm:/# 
+root@mypod-cm:/# 
+root@mypod-cm:/# 
+root@mypod-cm:/# cd /etc/myvolume/
+root@mypod-cm:/etc/myvolume# ls
+app.memory
+root@mypod-cm:/etc/myvolume# 
+root@mypod-cm:/etc/myvolume# 
+root@mypod-cm:/etc/myvolume# cat app.memory 
+1000
+
+
+
+
+
+To delete the configMap thats created:
+
+controlplane $ kubectl get configmaps 
+NAME               DATA   AGE
+kube-root-ca.crt   1      17d
+myconfigmap        1      21m
+controlplane $ 
+controlplane $ 
+controlplane $ 
+controlplane $ kubectl delete configmaps myconfigmap 
+configmap "myconfigmap" deleted
+controlplane $ 
+controlplane $ 
+controlplane $ kubectl get configmaps 
+NAME               DATA   AGE
+kube-root-ca.crt   1      17d
+controlplane $ 
+
+
+To create a config map using a file:
+
+controlplane $ cat app.properties 
+app.environments=prod
+app.memory=16000
+app.url=prod.env.url
+controlplane $
+
+controlplane $ kubectl create configmap myconfigmap --from-file=app.properties 
+configmap/myconfigmap created
+
+controlplane $ kubectl get configmaps myconfigmap -o yaml
+apiVersion: v1
+data:
+  app.properties: |
+    app.environments=prod
+    app.memory=16000
+    app.url=prod.env.url
+kind: ConfigMap
+metadata:
+  creationTimestamp: "2023-04-29T00:51:26Z"
+  name: myconfigmap
+  namespace: default
+  resourceVersion: "4826"
+  uid: f4fb4a40-2d9e-4642-81d1-87009b0a5357
+controlplane $
+
+
+
+
+controlplane $ kubectl get pod
+NAME       READY   STATUS    RESTARTS   AGE
+mypod-cm   1/1     Running   0          12m
+
+
+
+controlplane $ kubectl exec -it mypod-cm bash
+kubectl exec [POD] [COMMAND] is DEPRECATED and will be removed in a future version. Use kubectl exec [POD] -- [COMMAND] instead.
+root@mypod-cm:/# 
+root@mypod-cm:/# 
+root@mypod-cm:/# cd /etc/myvolume/
+root@mypod-cm:/etc/myvolume# 
+root@mypod-cm:/etc/myvolume# ls
+app.properties
+root@mypod-cm:/etc/myvolume# 
+root@mypod-cm:/etc/myvolume# 
+root@mypod-cm:/etc/myvolume# cat app.properties 
+app.environments=prod
+app.memory=16000
+app.url=prod.env.url
+root@mypod-cm:/etc/myvolume# 
+
+
+(Changes made in config map is updated in the file thats avilable in the pod)
