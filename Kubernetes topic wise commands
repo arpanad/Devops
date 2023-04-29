@@ -1,3 +1,234 @@
+1. ETCD Backup and Restore
+==========================
+
+To list the pods running in kube-system namespace
+
+controlplane $ kubectl -n kube-system get pod
+NAME                                       READY   STATUS    RESTARTS   AGE
+calico-kube-controllers-5f94594857-smxtv   1/1     Running   3          4d12h
+canal-2t87j                                2/2     Running   0          15m
+canal-sttmm                                2/2     Running   0          15m
+coredns-68dc769db8-6cwk7                   1/1     Running   0          4d12h
+coredns-68dc769db8-9h8gn                   1/1     Running   0          4d12h
+etcd-controlplane                          1/1     Running   0          4d12h
+kube-apiserver-controlplane                1/1     Running   2          4d12h
+kube-controller-manager-controlplane       1/1     Running   2          4d12h
+kube-proxy-ldwqn                           1/1     Running   0          4d12h
+kube-proxy-pftdf                           1/1     Running   0          4d12h
+kube-scheduler-controlplane                1/1     Running   2          4d12h
+controlplane $
+
+
+To describe the etcd-controlplane pod
+
+controlplane $ kubectl -n kube-system describe pod etcd-controlplane
+Name:                 etcd-controlplane
+Namespace:            kube-system
+Priority:             2000001000
+Priority Class Name:  system-node-critical
+Node:                 controlplane/172.30.1.2
+Start Time:           Tue, 11 Apr 2023 13:47:00 +0000
+Labels:               component=etcd
+                      tier=control-plane
+Annotations:          kubeadm.kubernetes.io/etcd.advertise-client-urls: https://172.30.1.2:2379
+                      kubernetes.io/config.hash: b148b4402415a8256914b3120a64c814
+                      kubernetes.io/config.mirror: b148b4402415a8256914b3120a64c814
+                      kubernetes.io/config.seen: 2023-04-11T13:48:25.081329796Z
+                      kubernetes.io/config.source: file
+Status:               Running
+IP:                   172.30.1.2
+IPs:
+  IP:           172.30.1.2
+Controlled By:  Node/controlplane
+Containers:
+  etcd:
+    Container ID:  containerd://70b4244f257a3075a40a94dae479cd3d9f69bb3069a7e07c1ab2b8019f2fad70
+    Image:         registry.k8s.io/etcd:3.5.6-0
+    Image ID:      registry.k8s.io/etcd@sha256:dd75ec974b0a2a6f6bb47001ba09207976e625db898d1b16735528c009cb171c
+    Port:          <none>
+    Host Port:     <none>
+    Command:
+      etcd
+      --advertise-client-urls=https://172.30.1.2:2379
+      --cert-file=/etc/kubernetes/pki/etcd/server.crt
+      --client-cert-auth=true
+      --data-dir=/var/lib/etcd
+      --experimental-initial-corrupt-check=true
+      --experimental-watch-progress-notify-interval=5s
+      --initial-advertise-peer-urls=https://172.30.1.2:2380
+      --initial-cluster=controlplane=https://172.30.1.2:2380
+      --key-file=/etc/kubernetes/pki/etcd/server.key
+      --listen-client-urls=https://127.0.0.1:2379,https://172.30.1.2:2379
+      --listen-metrics-urls=http://127.0.0.1:2381
+      --listen-peer-urls=https://172.30.1.2:2380
+      --name=controlplane
+      --peer-cert-file=/etc/kubernetes/pki/etcd/peer.crt
+      --peer-client-cert-auth=true
+      --peer-key-file=/etc/kubernetes/pki/etcd/peer.key
+      --peer-trusted-ca-file=/etc/kubernetes/pki/etcd/ca.crt
+      --snapshot-count=10000
+      --trusted-ca-file=/etc/kubernetes/pki/etcd/ca.crt
+    State:          Running
+      Started:      Tue, 11 Apr 2023 13:48:50 +0000
+    Ready:          True
+    Restart Count:  0
+    Requests:
+      cpu:        25m
+      memory:     100Mi
+    Liveness:     http-get http://127.0.0.1:2381/health%3Fexclude=NOSPACE&serializable=true delay=10s timeout=15s period=10s #success=1 #failure=8
+    Startup:      http-get http://127.0.0.1:2381/health%3Fserializable=false delay=10s timeout=15s period=10s #success=1 #failure=24
+    Environment:  <none>
+    Mounts:
+      /etc/kubernetes/pki/etcd from etcd-certs (rw)
+      /var/lib/etcd from etcd-data (rw)
+Conditions:
+  Type              Status
+  Initialized       True 
+  Ready             True 
+  ContainersReady   True 
+  PodScheduled      True 
+Volumes:
+  etcd-certs:
+    Type:          HostPath (bare host directory volume)
+    Path:          /etc/kubernetes/pki/etcd
+    HostPathType:  DirectoryOrCreate
+  etcd-data:
+    Type:          HostPath (bare host directory volume)
+    Path:          /var/lib/etcd
+    HostPathType:  DirectoryOrCreate
+QoS Class:         Burstable
+Node-Selectors:    <none>
+Tolerations:       :NoExecute op=Exists
+Events:
+  Type    Reason   Age    From     Message
+  ----    ------   ----   ----     -------
+  Normal  Pulled   4d13h  kubelet  Container image "registry.k8s.io/etcd:3.5.6-0" already present on machine
+  Normal  Created  4d13h  kubelet  Created container etcd
+  Normal  Started  4d13h  kubelet  Started container etcd
+controlplane $
+
+
+Create 2 deployments:
+
+controlplane $ kubectl create deployment blue --image=nginx:1.20.1 --replicas=3
+deployment.apps/blue created
+controlplane $ 
+controlplane $ 
+controlplane $ kubectl create deployment red --image=nginx:1.20.1 --replicas=3
+deployment.apps/red created
+controlplane $
+
+
+To find the deployments:
+
+controlplane $ kubectl get deployments.app
+NAME   READY   UP-TO-DATE   AVAILABLE   AGE
+blue   3/3     3            3           39s
+red    3/3     3            3           31s
+controlplane $
+
+
+
+To take the backup of the etcd:
+
+Refer the documentation and get the template and add the values
+
+(Template)
+ETCDCTL_API=3 etcdctl --endpoints=https://127.0.0.1:2379 \
+  --cacert=<trusted-ca-file> --cert=<cert-file> --key=<key-file> \
+  snapshot save <backup-file-location>
+  
+ 
+(After adding values) 
+controlplane $ ETCDCTL_API=3 etcdctl --endpoints=https://127.0.0.1:2379 \
+>   --cacert=/etc/kubernetes/pki/etcd/ca.crt --cert=/etc/kubernetes/pki/etcd/server.crt --key=/etc/kubernetes/pki/etcd/server.key \
+>   snapshot save /opt/snapshot-pre-boot.db
+{"level":"info","ts":1681614571.5468812,"caller":"snapshot/v3_snapshot.go:68","msg":"created temporary db file","path":"/opt/snapshot-pre-boot.db.part"}
+{"level":"info","ts":1681614571.564495,"logger":"client","caller":"v3/maintenance.go:211","msg":"opened snapshot stream; downloading"}
+{"level":"info","ts":1681614571.5647285,"caller":"snapshot/v3_snapshot.go:76","msg":"fetching snapshot","endpoint":"https://127.0.0.1:2379"}
+{"level":"info","ts":1681614571.7481716,"logger":"client","caller":"v3/maintenance.go:219","msg":"completed snapshot read; closing"}
+{"level":"info","ts":1681614571.7536092,"caller":"snapshot/v3_snapshot.go:91","msg":"fetched snapshot","endpoint":"https://127.0.0.1:2379","size":"6.2 MB","took":"now"}
+{"level":"info","ts":1681614571.7539244,"caller":"snapshot/v3_snapshot.go:100","msg":"saved","path":"/opt/snapshot-pre-boot.db"}
+Snapshot saved at /opt/snapshot-pre-boot.db
+controlplane $ 
+controlplane $
+
+
+To restore the etcd backup taken:
+
+take the template and modify
+ETCDCTL_API=3 etcdctl --endpoints 10.2.0.9:2379 snapshot restore snapshotdb          --  template
+
+ETCDCTL_API=3 etcdctl --data-dir=/var/lib/etcd-backup snapshot restore /opt/snapshot-pre-boot.db
+
+controlplane $ ETCDCTL_API=3 etcdctl --data-dir=/var/lib/etcd-backup snapshot restore /opt/snapshot-pre-boot.db
+Deprecated: Use `etcdutl snapshot restore` instead.
+
+2023-04-16T03:23:43Z    info    snapshot/v3_snapshot.go:251     restoring snapshot      {"path": "/opt/snapshot-pre-boot.db", "wal-dir": "/var/lib/etcd-backup/member/wal", "data-dir": "/var/lib/etcd-backup", "snap-dir": "/var/lib/etcd-backup/member/snap", "stack": "go.etcd.io/etcd/etcdutl/v3/snapshot.(*v3Manager).Restore\n\t/tmp/etcd-release-3.5.0/etcd/release/etcd/etcdutl/snapshot/v3_snapshot.go:257\ngo.etcd.io/etcd/etcdutl/v3/etcdutl.SnapshotRestoreCommandFunc\n\t/tmp/etcd-release-3.5.0/etcd/release/etcd/etcdutl/etcdutl/snapshot_command.go:147\ngo.etcd.io/etcd/etcdctl/v3/ctlv3/command.snapshotRestoreCommandFunc\n\t/tmp/etcd-release-3.5.0/etcd/release/etcd/etcdctl/ctlv3/command/snapshot_command.go:128\ngithub.com/spf13/cobra.(*Command).execute\n\t/home/remote/sbatsche/.gvm/pkgsets/go1.16.3/global/pkg/mod/github.com/spf13/cobra@v1.1.3/command.go:856\ngithub.com/spf13/cobra.(*Command).ExecuteC\n\t/home/remote/sbatsche/.gvm/pkgsets/go1.16.3/global/pkg/mod/github.com/spf13/cobra@v1.1.3/command.go:960\ngithub.com/spf13/cobra.(*Command).Execute\n\t/home/remote/sbatsche/.gvm/pkgsets/go1.16.3/global/pkg/mod/github.com/spf13/cobra@v1.1.3/command.go:897\ngo.etcd.io/etcd/etcdctl/v3/ctlv3.Start\n\t/tmp/etcd-release-3.5.0/etcd/release/etcd/etcdctl/ctlv3/ctl.go:107\ngo.etcd.io/etcd/etcdctl/v3/ctlv3.MustStart\n\t/tmp/etcd-release-3.5.0/etcd/release/etcd/etcdctl/ctlv3/ctl.go:111\nmain.main\n\t/tmp/etcd-release-3.5.0/etcd/release/etcd/etcdctl/main.go:59\nruntime.main\n\t/home/remote/sbatsche/.gvm/gos/go1.16.3/src/runtime/proc.go:225"}
+2023-04-16T03:23:43Z    info    membership/store.go:119 Trimming membership information from the backend...
+2023-04-16T03:23:43Z    info    membership/cluster.go:393       added member    {"cluster-id": "cdf818194e3a8c32", "local-member-id": "0", "added-peer-id": "8e9e05c52164694d", "added-peer-peer-urls": ["http://localhost:2380"]}
+2023-04-16T03:23:43Z    info    snapshot/v3_snapshot.go:272     restored snapshot       {"path": "/opt/snapshot-pre-boot.db", "wal-dir": "/var/lib/etcd-backup/member/wal", "data-dir": "/var/lib/etcd-backup", "snap-dir": "/var/lib/etcd-backup/member/snap"}
+controlplane $
+
+
+
+
+
+
+
+
+Modify the /etc/kubernetes/manifests/etcd.yaml file 
+
+(old)
+  volumes:
+  - hostPath:
+      path: /etc/kubernetes/pki/etcd
+      type: DirectoryOrCreate
+    name: etcd-certs
+  - hostPath:
+      path: /var/lib/etcd
+      type: DirectoryOrCreate
+    name: etcd-data
+status: {}
+
+
+(new)
+  volumes:
+  - hostPath:
+      path: /etc/kubernetes/pki/etcd
+      type: DirectoryOrCreate
+    name: etcd-certs
+  - hostPath:
+      path: /var/lib/etcd-backup
+      type: DirectoryOrCreate
+    name: etcd-data
+status: {}
+
+
+To verify:
+
+controlplane $ docker ps | grep etcd
+controlplane $ 
+controlplane $ 
+controlplane $ kubectl get deployments.apps 
+NAME   READY   UP-TO-DATE   AVAILABLE   AGE
+blue   3/3     3            3           38m
+red    3/3     3            3           37m
+controlplane $ 
+
+
+controlplane $ kubectl get pod
+NAME                    READY   STATUS    RESTARTS   AGE
+blue-5cdb7b98b7-72c6j   1/1     Running   0          38m
+blue-5cdb7b98b7-d6q6d   1/1     Running   0          38m
+blue-5cdb7b98b7-ljfw8   1/1     Running   0          38m
+red-7dd785ff8b-2jdnl    1/1     Running   0          38m
+red-7dd785ff8b-7zqcp    1/1     Running   0          38m
+red-7dd785ff8b-mf8lk    1/1     Running   0          38m
+controlplane $
+
+
+
 4. Simple Pod Creation ... Imperative and Declarative way
 ==========================================================
 
