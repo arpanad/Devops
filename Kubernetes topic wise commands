@@ -1513,3 +1513,232 @@ root@mypod-cm:/etc/myvolume#
 
 
 (Changes made in config map is updated in the file thats avilable in the pod)
+
+
+
+12. SECRETS:
+============
+
+To get the secrets:
+
+controlplane $ kubectl get secrets
+No resources found in default namespace.
+controlplane $
+
+
+
+To conevert a password to base64:
+
+controlplane $ openssl enc -base64 <<< 'secret123'
+c2VjcmV0MTIzCg==
+controlplane $
+
+
+
+To convert base64 to normal text:
+
+controlplane $ openssl enc -base64 -d <<< 'c2VjcmV0MTIzCg=='
+secret123
+controlplane $ 
+
+
+Create a secret and verify:
+
+controlplane $ kubectl create secret generic myfirstsecret --from-literal=db_pass=secret123
+secret/myfirstsecret created
+controlplane $ 
+controlplane $ 
+controlplane $ kubectl get secrets
+NAME            TYPE     DATA   AGE
+myfirstsecret   Opaque   1      6s
+controlplane $
+
+
+
+Describe the secret:
+
+controlplane $ kubectl describe secrets myfirstsecret 
+Name:         myfirstsecret
+Namespace:    default
+Labels:       <none>
+Annotations:  <none>
+
+Type:  Opaque
+
+Data
+====
+db_pass:  9 bytes
+
+
+Get the secret in yaml format:
+
+controlplane $ kubectl get secrets myfirstsecret -o yaml 
+apiVersion: v1
+data:
+  db_pass: c2VjcmV0MTIz
+kind: Secret
+metadata:
+  creationTimestamp: "2023-04-29T02:54:22Z"
+  name: myfirstsecret
+  namespace: default
+  resourceVersion: "4092"
+  uid: 4b5047b7-3fc2-4c2a-b01d-32519d98a6b1
+type: Opaque
+controlplane $ 
+
+
+Decode the password obtained and verify if its same as used while creating the secret:
+
+controlplane $ openssl enc -base64 -d <<< c2VjcmV0MTIz
+secret123
+
+
+
+
+
+To create a secret using yaml file where the password is in base64:
+
+controlplane $ vi sec-secret.yaml
+controlplane $ 
+controlplane $ 
+controlplane $ cat sec-secret.yaml 
+apiVersion: v1
+kind: Secret
+metadata:
+  name: mysecondsecret
+type: Opaque
+data:
+  db_pass: c2VjcmV0MTIzCg==
+controlplane $ 
+
+controlplane $ kubectl apply -f sec-secret.yaml 
+secret/mysecondsecret created
+
+To get the secret just created:
+
+controlplane $ kubectl get secrets mysecondsecret 
+NAME             TYPE     DATA   AGE
+mysecondsecret   Opaque   1      57s
+controlplane $ 
+controlplane $ 
+controlplane $ kubectl get secrets mysecondsecret -o yaml
+apiVersion: v1
+data:
+  db_pass: c2VjcmV0MTIzCg==
+kind: Secret
+metadata:
+  annotations:
+    kubectl.kubernetes.io/last-applied-configuration: |
+      {"apiVersion":"v1","data":{"db_pass":"c2VjcmV0MTIzCg=="},"kind":"Secret","metadata":{"annotations":{},"name":"mysecondsecret","namespace":"default"},"type":"Opaque"}
+  creationTimestamp: "2023-04-29T03:03:55Z"
+  name: mysecondsecret
+  namespace: default
+  resourceVersion: "4891"
+  uid: 62f1b437-d349-4def-9181-e0ef7ebbb4ff
+type: Opaque
+controlplane $
+
+
+Get the db pass and decode it:
+
+controlplane $ openssl enc -base64 -d <<< 'c2VjcmV0MTIzCg=='
+secret123
+
+
+
+Creating secret using yaml file with password as normal text:
+
+controlplane $ vi third-secret.yaml 
+controlplane $ 
+controlplane $ 
+controlplane $ cat third-secret.yaml 
+apiVersion: v1
+kind: Secret
+metadata:
+  name: mythirdsecret
+stringData:
+  db_pass: secret123
+controlplane $
+
+
+controlplane $ kubectl apply -f third-secret.yaml 
+secret/mythirdsecret created
+controlplane $ 
+
+
+controlplane $ kubectl get secrets 
+NAME             TYPE     DATA   AGE
+myfirstsecret    Opaque   1      15m
+mysecondsecret   Opaque   1      5m48s
+mythirdsecret    Opaque   1      25s
+controlplane $ 
+
+
+
+To create pod volume in pod and to place the password in that volume path :
+
+controlplane $ cat pod-volume.yaml 
+apiVersion: v1
+kind: Pod
+metadata:
+  name: mysecretpod
+spec:
+  containers:
+  - name: mysecretpod
+    image: nginx
+    volumeMounts:
+    - name: sec-volume
+      mountPath: "/etc/volume"
+      readOnly: true
+  volumes:
+  - name: sec-volume
+    secret:
+      secretName: myfirstsecret
+controlplane $ 
+
+controlplane $ kubectl apply -f pod-volume.yaml 
+pod/mysecretpod created
+controlplane $
+
+
+root@mysecretpod:/etc/volume# pwd
+/etc/volume
+
+root@mysecretpod:/etc/volume# ls
+db_pass
+
+root@mysecretpod:/etc/volume# cat db_pass 
+secret123
+
+
+To use env variable:
+
+ontrolplane $ cat pod-env.yaml 
+apiVersion: v1
+kind: Pod
+metadata:
+  name: secret-env-pod
+spec:
+  containers:
+  - name: mycontainer
+    image: nginx
+    env:
+      - name: DB_PASS
+        valueFrom:
+          secretKeyRef:
+            name: myfirstsecret
+            key: db_pass
+  restartPolicy: Never
+controlplane $ 
+
+
+Login to the pod and get the pass by using env variable:
+
+controlplane $ kubectl exec -it secret-env-pod bash
+kubectl exec [POD] [COMMAND] is DEPRECATED and will be removed in a future version. Use kubectl exec [POD] -- [COMMAND] instead.
+root@secret-env-pod:/# 
+root@secret-env-pod:/# 
+root@secret-env-pod:/# 
+root@secret-env-pod:/# echo $DB_PASS
+secret123
+root@secret-env-pod:/#
